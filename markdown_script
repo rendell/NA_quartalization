@@ -1,0 +1,48 @@
+---
+title: "Quarterly output manipulation National Accounts"
+author: "Rendell E . de Kort"
+date: "January 31, 2019"
+output: word_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## About this file
+
+This is an explanatory note for the steps to convert quarterly output information obtained through the "Herbynization", "quarterly estimation" and "quarterly exceptions" file.
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+
+
+## Reading in the data
+Data should be in "Comma Seperated Values" (csv.) format to be loaded in and saved in the folder that is consistent with the Working Directory of th R session.
+
+
+```{r exceptions, echo=FALSE}
+exceptions<-read.csv("ISIC_NO_DENTON.csv")
+exceptions
+```
+
+Load the dplyr package and transform the data into a tbl_df format
+
+```{r exceptions}
+library(dplyr)
+exceptions<- tbl_df(exceptions)
+exceptions
+```
+
+Filtering data to contain the sections that we are interested seperatly
+```{r exceptions}
+Nominal_Q <- filter(exceptions,exceptions$Description=="B nominal")
+Nominal_Q$Description <- NULL
+```
+
+Convert to time series (not working yet)
+```{r exceptions}
+library(tibbletime)
+Nominal_Q <- as_tbl_time(Nominal_Q, index = Nominal_Q$Time)
+```
+
