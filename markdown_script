@@ -93,3 +93,6 @@ To do:
 - Need to include control to ensure that all deflators are 100 in year 2013.
 - In Test.equality$Value, need to sum up filled in fields and divide by total B1.g.
 - In Test.equality$Value, need to count filled in cells and display missing.
+- Find source of bug that prevents Knitr from creating the word document.
+- Output csv. files.
+- If possible e-mail markdown outputs to Herry via Outlook
