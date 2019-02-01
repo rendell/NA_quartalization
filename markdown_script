@@ -5,8 +5,10 @@ date: "January 31, 2019"
 output: word_document
 ---
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+```{r v}
+data1<-read.csv("Q_NO_DENTON.csv")
+data2<-read.csv("Q_DENTON.csv")
+stavaza<-read.csv("stavazaR.csv")
 ```
 
 ## About this file
@@ -19,15 +21,11 @@ This is an R Markdown document. Markdown is a simple formatting syntax for autho
 
 ## Reading in the data (not working in the Shiny code)
 Data should be in "Comma Seperated Values" (csv.) format to be loaded in and saved in the folder that is consistent with the Working Directory of th R session.
-```{r}
-data1<-read.csv("Q_NO_DENTON.csv")
-data2<-read.csv("Q_DENTON.csv")
-stavaza<-read.csv("stavazaR.csv")
-```
+
 
 Load the dplyr package and transform the data into a tbl_df format and merge.
 
-```{r exceptions}
+```{r a}
 library(dplyr)
 data1 <- tbl_df(data1)
 data2 <- tbl_df(data2)
@@ -39,7 +37,7 @@ rm(data2)
 Filtering data to contain the sections that we are interested seperatly
 
 
-```{r exceptions}
+```{r b}
 Nominal_Q   <- filter(databind,databind$Description=="Nominal VA")
 Nominal_Q$Description <- NULL
 
@@ -59,12 +57,12 @@ rm(databind)
 ```
 
 Creating a check to verify whether the year figures are consistent with Stavaza
-```{r}
+```{r c}
 Check.Nominal.Y.2013 <-filter(Nominal_Y,Period=="2013")
 
 as.character(stavaza$Werk.ISIC)
 
-stavaza<- select(stavaza,c(Werk.ISIC,B1.g))
+stavaza<- select(stavaza,c(Werk.ISIC,B1.g,TAB.CAT_DESCRIPTION,ISIC_DESCRIPTION))
 
 Check.Nominal.Y.2013<- select(Check.Nominal.Y.2013,c(STATID,Value))
 
@@ -75,10 +73,12 @@ rm(Check.Nominal.Y.2013)
 
 Test.equality$Check <-Test.equality$Value==Test.equality$B1.g
 
+Test.equality       <- Test.equality[,c(1,3,4,2,5,6)]
+
 ```
 
 
-```{r}
+```{r d}
 library(tidyr)
 Deflator_Q <-spread(Deflator_Q,STATID,Value)
 Nominal_Q  <-spread(Nominal_Q,STATID,Value)
@@ -88,13 +88,8 @@ Real_Y     <-spread(Real_Y,STATID,Value)
 
 ```
 
-```{r}
 
-```
-
-
-Convert to time series (not working yet)
-```{r exceptions}
-library(tibbletime)
-Nominal_Q <- as_tbl_time(Nominal_Q, index = Nominal_Q$Time)
-```
+To do: 
+- Need to include control to ensure that all deflators are 100 in year 2013.
+- In Test.equality$Value, need to sum up filled in fields and divide by total B1.g.
+- In Test.equality$Value, need to count filled in cells and display missing.
