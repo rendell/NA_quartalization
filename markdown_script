@@ -19,7 +19,7 @@ This is an R Markdown document. Markdown is a simple formatting syntax for autho
 
 ## Reading in the data (not working in the Shiny code)
 Data should be in "Comma Seperated Values" (csv.) format to be loaded in and saved in the folder that is consistent with the Working Directory of th R session.
-```{r exceptions}
+```{r}
 data1<-read.csv("Q_NO_DENTON.csv")
 data2<-read.csv("Q_DENTON.csv")
 stavaza<-read.csv("stavazaR.csv")
@@ -58,8 +58,27 @@ Deflator_Q$Description <- NULL
 rm(databind)
 ```
 
+Creating a check to verify whether the year figures are consistent with Stavaza
+```{r}
+Check.Nominal.Y.2013 <-filter(Nominal_Y,Period=="2013")
 
-```{r exceptions}
+as.character(stavaza$Werk.ISIC)
+
+stavaza<- select(stavaza,c(Werk.ISIC,B1.g))
+
+Check.Nominal.Y.2013<- select(Check.Nominal.Y.2013,c(STATID,Value))
+
+Test.equality <- left_join(stavaza,Check.Nominal.Y.2013,
+                   by=c("Werk.ISIC"="STATID"))
+
+rm(Check.Nominal.Y.2013)
+
+Test.equality$Check <-Test.equality$Value==Test.equality$B1.g
+
+```
+
+
+```{r}
 library(tidyr)
 Deflator_Q <-spread(Deflator_Q,STATID,Value)
 Nominal_Q  <-spread(Nominal_Q,STATID,Value)
@@ -68,6 +87,11 @@ Real_Q     <-spread(Real_Q,STATID,Value)
 Real_Y     <-spread(Real_Y,STATID,Value)
 
 ```
+
+```{r}
+
+```
+
 
 Convert to time series (not working yet)
 ```{r exceptions}
