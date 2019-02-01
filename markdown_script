@@ -17,27 +17,56 @@ This is an R Markdown document. Markdown is a simple formatting syntax for autho
 
 
 
-## Reading in the data
+## Reading in the data (not working in the Shiny code)
 Data should be in "Comma Seperated Values" (csv.) format to be loaded in and saved in the folder that is consistent with the Working Directory of th R session.
-
-
-```{r exceptions, echo=FALSE}
-exceptions<-read.csv("ISIC_NO_DENTON.csv")
-exceptions
+```{r exceptions}
+data1<-read.csv("Q_NO_DENTON.csv")
+data2<-read.csv("Q_DENTON.csv")
+stavaza<-read.csv("stavazaR.csv")
 ```
 
-Load the dplyr package and transform the data into a tbl_df format
+Load the dplyr package and transform the data into a tbl_df format and merge.
 
 ```{r exceptions}
 library(dplyr)
-exceptions<- tbl_df(exceptions)
-exceptions
+data1 <- tbl_df(data1)
+data2 <- tbl_df(data2)
+databind <- bind_rows(data1,data2)
+rm(data1)
+rm(data2)
 ```
 
 Filtering data to contain the sections that we are interested seperatly
+
+
 ```{r exceptions}
-Nominal_Q <- filter(exceptions,exceptions$Description=="B nominal")
+Nominal_Q   <- filter(databind,databind$Description=="Nominal VA")
 Nominal_Q$Description <- NULL
+
+Real_Q      <- filter(databind,databind$Description=="Real VA")
+Real_Q$Description <- NULL
+
+Nominal_Y   <- filter(databind,databind$Description=="B nominal")
+Nominal_Y$Description <- NULL
+
+Real_Y      <- filter(databind,databind$Description=="B Real")
+Real_Y$Description <- NULL
+
+Deflator_Q  <- filter(databind,databind$Description=="Deflator")
+Deflator_Q$Description <- NULL
+
+rm(databind)
+```
+
+
+```{r exceptions}
+library(tidyr)
+Deflator_Q <-spread(Deflator_Q,STATID,Value)
+Nominal_Q  <-spread(Nominal_Q,STATID,Value)
+Nominal_Y  <-spread(Nominal_Y,STATID,Value)
+Real_Q     <-spread(Real_Q,STATID,Value)
+Real_Y     <-spread(Real_Y,STATID,Value)
+
 ```
 
 Convert to time series (not working yet)
@@ -45,4 +74,3 @@ Convert to time series (not working yet)
 library(tibbletime)
 Nominal_Q <- as_tbl_time(Nominal_Q, index = Nominal_Q$Time)
 ```
-
