@@ -54,6 +54,35 @@ Deflator               <- filter(databind,databind$Description=="Deflator")
 Deflator$Description   <- NULL
 
 rm(databind)
+
+# Deflator
+Deflator.2013 <- filter(Deflator,Deflator$Period=="2013")
+Deflator.2013$Y_2013 <- Deflator.2013$Value
+Deflator.2013$Value <- NULL
+Deflator.2013$Period <- NULL
+
+Deflator.2014 <- filter(Deflator,Deflator$Period=="2014")
+Deflator.2014$Y_2014 <- Deflator.2014$Value
+Deflator.2014$Value <- NULL
+Deflator.2014$Period <- NULL
+
+Deflator.2015 <- filter(Deflator,Deflator$Period=="2015")
+Deflator.2015$Y_2015 <- Deflator.2015$Value
+Deflator.2015$Value <- NULL
+Deflator.2015$Period <- NULL
+
+Deflator.2016 <- filter(Deflator,Deflator$Period=="2016")
+Deflator.2016$Y_2016 <- Deflator.2016$Value
+Deflator.2016$Value <- NULL
+Deflator.2016$Period <- NULL
+
+Deflator.2017 <- filter(Deflator,Deflator$Period=="2017")
+Deflator.2017$Y_2017 <- Deflator.2017$Value
+Deflator.2017$Value <- NULL
+Deflator.2017$Period <- NULL
+
+#Needs to be continued
+
 ```
 
 Creating a check to verify whether the year figures are consistent with Stavaza
@@ -63,7 +92,7 @@ Check.Nominal.Y.2013   <-filter(Nominal_Y,Period=="2013")
 as.character(stavaza$Werk.ISIC)
  
 stavaza                <- select(stavaza,
-                           c(Werk.ISIC,B1.g,TAB.CAT_DESCRIPTION,ISIC_DESCRIPTION))
+                           c(Werk.ISIC,B1.g,TAB.CAT,TAB.CAT_DESCRIPTION,ISIC_DESCRIPTION))
 
 Check.Nominal.Y.2013   <- select(Check.Nominal.Y.2013,c(STATID,Value))
 
@@ -74,7 +103,7 @@ rm(Check.Nominal.Y.2013)
 
 Test.equality$Check    <-Test.equality$Value==Test.equality$B1.g
 
-Test.equality          <- Test.equality[,c(1,3,4,2,5,6)]
+Test.equality          <- Test.equality[,c(1,3,4,5,2,6,7)]
 
 rm(stavaza)
 
@@ -89,43 +118,8 @@ Nominal_Y  <-spread(Nominal_Y,STATID,Value)
 Real_Q     <-spread(Real_Q,STATID,Value)
 Real_Y     <-spread(Real_Y,STATID,Value)
 
+Deflator$Period <- c(2013,2014,2015,2016,2017)
+Real_Y$Period <- c(2013,2014,2015,2016,2017)
+Nominal_Y$Period <- c(2013,2014,2015,2016,2017)
+
 ```
-
-
-Write csv files. Not working at the moment. xlsx package doesn't load.
-```{r}
-write.xlsx(Deflator, file="Output_Q_NA.xlsx",
-      sheetName="Deflator", append=FALSE)
-write.xlsx(Nominal_Q, file="Output_Q_NA.xlsx", 
-           sheetName="Nominal_Q", append=TRUE)
-write.xlsx(Real_Q, file="Output_Q_NA.xlsx", 
-           sheetName="Real_Q", append=TRUE)
-write.xlsx(Nominal_Y, file="Output_Q_NA.xlsx", 
-           sheetName="Nominal_Y", append=TRUE)
-write.xlsx(Real_Y, file="Output_Q_NA.xlsx", 
-           sheetName="Real_Y", append=TRUE)
-write.xlsx(Test.equality, file="Output_Q_NA.xlsx", 
-           sheetName="Summary", append=TRUE)
-```
-
-
-This does work. However, would like to have all the tabs combined.
-```{r }
-write.csv(Deflator, file =       "Output_Deflator.csv")
-write.csv(Nominal_Q, file =      "Output_Nominal_Q.csv")
-write.csv(Real_Q, file =         "Output_Real_Q.csv")
-write.csv(Nominal_Y, file =      "Output_Nominal_Y.csv")
-write.csv(Real_Y, file =         "Output_Real_Y.csv")
-write.csv(Test.equality, file =  "Output_Summary.csv")
-```
-
-
-To do: 
-- Need to include control to ensure that all deflators are 100 in year 2013.
-- In Test.equality$Value, need to sum up filled in fields and divide by total B1.g.
-- In Test.equality$Value, need to count filled in cells and display missing.
-- Find source of bug that prevents Knitr from creating the word document.
-- Output csv. files.
-- If possible e-mail markdown outputs to Herry via Outlook
-- Convert evrything to to time series
-- Start graphing.
