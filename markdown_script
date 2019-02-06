@@ -6,9 +6,9 @@ output: word_document
 ---
 
 ```{r v}
-data1<-read.csv("Q_NO_DENTON.csv")
-data2<-read.csv("Q_DENTON.csv")
-stavaza<-read.csv("stavazaR.csv")
+data1    <-  read.csv("Q_NO_DENTON.csv")
+data2    <-  read.csv("Q_DENTON.csv")
+stavaza  <-  read.csv("stavazaR.csv")
 ```
 
 ## About this file
@@ -58,27 +58,27 @@ rm(databind)
 # Deflator
 Deflator.2013 <- filter(Deflator,Deflator$Period=="2013")
 Deflator.2013$Y_2013 <- Deflator.2013$Value
-Deflator.2013$Value <- NULL
+Deflator.2013$Value  <- NULL
 Deflator.2013$Period <- NULL
 
 Deflator.2014 <- filter(Deflator,Deflator$Period=="2014")
 Deflator.2014$Y_2014 <- Deflator.2014$Value
-Deflator.2014$Value <- NULL
+Deflator.2014$Value  <- NULL
 Deflator.2014$Period <- NULL
 
 Deflator.2015 <- filter(Deflator,Deflator$Period=="2015")
 Deflator.2015$Y_2015 <- Deflator.2015$Value
-Deflator.2015$Value <- NULL
+Deflator.2015$Value  <- NULL
 Deflator.2015$Period <- NULL
 
 Deflator.2016 <- filter(Deflator,Deflator$Period=="2016")
 Deflator.2016$Y_2016 <- Deflator.2016$Value
-Deflator.2016$Value <- NULL
+Deflator.2016$Value  <- NULL
 Deflator.2016$Period <- NULL
 
 Deflator.2017 <- filter(Deflator,Deflator$Period=="2017")
 Deflator.2017$Y_2017 <- Deflator.2017$Value
-Deflator.2017$Value <- NULL
+Deflator.2017$Value  <- NULL
 Deflator.2017$Period <- NULL
 
 Deflator.time<-bind_cols(Deflator.2013,
@@ -101,27 +101,27 @@ rm(Deflator.2017)
 # Nominal_Y
 Nominal_Y.2013 <- filter(Nominal_Y,Nominal_Y$Period=="2013")
 Nominal_Y.2013$Y_2013 <- Nominal_Y.2013$Value
-Nominal_Y.2013$Value <- NULL
+Nominal_Y.2013$Value  <- NULL
 Nominal_Y.2013$Period <- NULL
 
 Nominal_Y.2014 <- filter(Nominal_Y,Nominal_Y$Period=="2014")
 Nominal_Y.2014$Y_2014 <- Nominal_Y.2014$Value
-Nominal_Y.2014$Value <- NULL
+Nominal_Y.2014$Value  <- NULL
 Nominal_Y.2014$Period <- NULL
 
 Nominal_Y.2015 <- filter(Nominal_Y,Nominal_Y$Period=="2015")
 Nominal_Y.2015$Y_2015 <- Nominal_Y.2015$Value
-Nominal_Y.2015$Value <- NULL
+Nominal_Y.2015$Value  <- NULL
 Nominal_Y.2015$Period <- NULL
 
 Nominal_Y.2016 <- filter(Nominal_Y,Nominal_Y$Period=="2016")
 Nominal_Y.2016$Y_2016 <- Nominal_Y.2016$Value
-Nominal_Y.2016$Value <- NULL
+Nominal_Y.2016$Value  <- NULL
 Nominal_Y.2016$Period <- NULL
 
 Nominal_Y.2017 <- filter(Nominal_Y,Nominal_Y$Period=="2017")
 Nominal_Y.2017$Y_2017 <- Nominal_Y.2017$Value
-Nominal_Y.2017$Value <- NULL
+Nominal_Y.2017$Value  <- NULL
 Nominal_Y.2017$Period <- NULL
 
 Nominal_Y.time<-bind_cols(Nominal_Y.2013,
@@ -143,27 +143,27 @@ rm(Nominal_Y.2017)
 #Real_Y
 Real_Y.2013 <- filter(Real_Y,Real_Y$Period=="2013")
 Real_Y.2013$Y_2013 <- Real_Y.2013$Value
-Real_Y.2013$Value <- NULL
+Real_Y.2013$Value  <- NULL
 Real_Y.2013$Period <- NULL
 
 Real_Y.2014 <- filter(Real_Y,Real_Y$Period=="2014")
 Real_Y.2014$Y_2014 <- Real_Y.2014$Value
-Real_Y.2014$Value <- NULL
+Real_Y.2014$Value  <- NULL
 Real_Y.2014$Period <- NULL
 
 Real_Y.2015 <- filter(Real_Y,Real_Y$Period=="2015")
 Real_Y.2015$Y_2015 <- Real_Y.2015$Value
-Real_Y.2015$Value <- NULL
+Real_Y.2015$Value  <- NULL
 Real_Y.2015$Period <- NULL
 
 Real_Y.2016 <- filter(Real_Y,Real_Y$Period=="2016")
 Real_Y.2016$Y_2016 <- Real_Y.2016$Value
-Real_Y.2016$Value <- NULL
+Real_Y.2016$Value  <- NULL
 Real_Y.2016$Period <- NULL
 
 Real_Y.2017 <- filter(Real_Y,Real_Y$Period=="2017")
 Real_Y.2017$Y_2017 <- Real_Y.2017$Value
-Real_Y.2017$Value <- NULL
+Real_Y.2017$Value  <- NULL
 Real_Y.2017$Period <- NULL
 
 Real_Y.time<-bind_cols(Real_Y.2013,
@@ -183,6 +183,8 @@ rm(Real_Y.2016)
 rm(Real_Y.2017)
 
 #Nominal_Q
+
+
 
 #Real_Q
 
@@ -223,21 +225,68 @@ Nominal_Y  <-spread(Nominal_Y,STATID,Value)
 Real_Q     <-spread(Real_Q,STATID,Value)
 Real_Y     <-spread(Real_Y,STATID,Value)
 
-Deflator$Period <- c(2013,2014,2015,2016,2017)
-Real_Y$Period <- c(2013,2014,2015,2016,2017)
+Deflator$Period  <- c(2013,2014,2015,2016,2017)
+Real_Y$Period    <- c(2013,2014,2015,2016,2017)
 Nominal_Y$Period <- c(2013,2014,2015,2016,2017)
+
+## Need to add quarterly series
 
 ```
 
+Add series name
+```{R}
+# Deflator
+Deflator.time<- left_join(Deflator.time,Test.equality,
+                   by=c("STATID"="Werk.ISIC"))
+Deflator.time<- select(Deflator.time,c(STATID,
+                                       Y_2013,
+                                       Y_2014,
+                                       Y_2015,
+                                       Y_2016,
+                                       Y_2017,
+                                       TAB.CAT,
+                                       TAB.CAT_DESCRIPTION,
+                                       ISIC_DESCRIPTION
+                                       ))
+Deflator.time          <- Deflator.time[,c(1,7,8,9,2,3,4,5,6)]
+
+# Nominal_Y
+Nominal_Y.time<- left_join(Nominal_Y.time,Test.equality,
+                   by=c("STATID"="Werk.ISIC"))
+Nominal_Y.time<- select(Nominal_Y.time,c(STATID,
+                                       Y_2013,
+                                       Y_2014,
+                                       Y_2015,
+                                       Y_2016,
+                                       Y_2017,
+                                       TAB.CAT,
+                                       TAB.CAT_DESCRIPTION,
+                                       ISIC_DESCRIPTION
+                                       ))
+Nominal_Y.time          <- Nominal_Y.time[,c(1,7,8,9,2,3,4,5,6)]
+
+# Real_Y
+Real_Y.time<- left_join(Real_Y.time,Test.equality,
+                   by=c("STATID"="Werk.ISIC"))
+Real_Y.time<- select(Real_Y.time,c(STATID,
+                                       Y_2013,
+                                       Y_2014,
+                                       Y_2015,
+                                       Y_2016,
+                                       Y_2017,
+                                       TAB.CAT,
+                                       TAB.CAT_DESCRIPTION,
+                                       ISIC_DESCRIPTION
+                                       ))
+Real_Y.time          <- Real_Y.time[,c(1,7,8,9,2,3,4,5,6)]
+```
 
 
+Grouping by TAB.CAT
+```{r}
 
 
-
-
-
-
-
+```
 
 
 ########Using the "t" function, which is outside the tidyverse. So 
