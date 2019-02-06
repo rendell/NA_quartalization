@@ -81,6 +81,111 @@ Deflator.2017$Y_2017 <- Deflator.2017$Value
 Deflator.2017$Value <- NULL
 Deflator.2017$Period <- NULL
 
+Deflator.time<-bind_cols(Deflator.2013,
+                         Deflator.2014,
+                         Deflator.2015,
+                         Deflator.2016,
+                         Deflator.2017)
+Deflator.time$STATID1<- NULL
+Deflator.time$STATID2<- NULL
+Deflator.time$STATID3<- NULL
+Deflator.time$STATID4<- NULL
+
+rm(Deflator.2013)
+rm(Deflator.2014)
+rm(Deflator.2015)
+rm(Deflator.2016)
+rm(Deflator.2017)
+
+
+# Nominal_Y
+Nominal_Y.2013 <- filter(Nominal_Y,Nominal_Y$Period=="2013")
+Nominal_Y.2013$Y_2013 <- Nominal_Y.2013$Value
+Nominal_Y.2013$Value <- NULL
+Nominal_Y.2013$Period <- NULL
+
+Nominal_Y.2014 <- filter(Nominal_Y,Nominal_Y$Period=="2014")
+Nominal_Y.2014$Y_2014 <- Nominal_Y.2014$Value
+Nominal_Y.2014$Value <- NULL
+Nominal_Y.2014$Period <- NULL
+
+Nominal_Y.2015 <- filter(Nominal_Y,Nominal_Y$Period=="2015")
+Nominal_Y.2015$Y_2015 <- Nominal_Y.2015$Value
+Nominal_Y.2015$Value <- NULL
+Nominal_Y.2015$Period <- NULL
+
+Nominal_Y.2016 <- filter(Nominal_Y,Nominal_Y$Period=="2016")
+Nominal_Y.2016$Y_2016 <- Nominal_Y.2016$Value
+Nominal_Y.2016$Value <- NULL
+Nominal_Y.2016$Period <- NULL
+
+Nominal_Y.2017 <- filter(Nominal_Y,Nominal_Y$Period=="2017")
+Nominal_Y.2017$Y_2017 <- Nominal_Y.2017$Value
+Nominal_Y.2017$Value <- NULL
+Nominal_Y.2017$Period <- NULL
+
+Nominal_Y.time<-bind_cols(Nominal_Y.2013,
+                         Nominal_Y.2014,
+                         Nominal_Y.2015,
+                         Nominal_Y.2016,
+                         Nominal_Y.2017)
+Nominal_Y.time$STATID1<- NULL
+Nominal_Y.time$STATID2<- NULL
+Nominal_Y.time$STATID3<- NULL
+Nominal_Y.time$STATID4<- NULL
+
+rm(Nominal_Y.2013)
+rm(Nominal_Y.2014)
+rm(Nominal_Y.2015)
+rm(Nominal_Y.2016)
+rm(Nominal_Y.2017)
+
+#Real_Y
+Real_Y.2013 <- filter(Real_Y,Real_Y$Period=="2013")
+Real_Y.2013$Y_2013 <- Real_Y.2013$Value
+Real_Y.2013$Value <- NULL
+Real_Y.2013$Period <- NULL
+
+Real_Y.2014 <- filter(Real_Y,Real_Y$Period=="2014")
+Real_Y.2014$Y_2014 <- Real_Y.2014$Value
+Real_Y.2014$Value <- NULL
+Real_Y.2014$Period <- NULL
+
+Real_Y.2015 <- filter(Real_Y,Real_Y$Period=="2015")
+Real_Y.2015$Y_2015 <- Real_Y.2015$Value
+Real_Y.2015$Value <- NULL
+Real_Y.2015$Period <- NULL
+
+Real_Y.2016 <- filter(Real_Y,Real_Y$Period=="2016")
+Real_Y.2016$Y_2016 <- Real_Y.2016$Value
+Real_Y.2016$Value <- NULL
+Real_Y.2016$Period <- NULL
+
+Real_Y.2017 <- filter(Real_Y,Real_Y$Period=="2017")
+Real_Y.2017$Y_2017 <- Real_Y.2017$Value
+Real_Y.2017$Value <- NULL
+Real_Y.2017$Period <- NULL
+
+Real_Y.time<-bind_cols(Real_Y.2013,
+                         Real_Y.2014,
+                         Real_Y.2015,
+                         Real_Y.2016,
+                         Real_Y.2017)
+Real_Y.time$STATID1<- NULL
+Real_Y.time$STATID2<- NULL
+Real_Y.time$STATID3<- NULL
+Real_Y.time$STATID4<- NULL
+
+rm(Real_Y.2013)
+rm(Real_Y.2014)
+rm(Real_Y.2015)
+rm(Real_Y.2016)
+rm(Real_Y.2017)
+
+#Nominal_Q
+
+#Real_Q
+
 #Needs to be continued
 
 ```
@@ -123,3 +228,65 @@ Real_Y$Period <- c(2013,2014,2015,2016,2017)
 Nominal_Y$Period <- c(2013,2014,2015,2016,2017)
 
 ```
+
+
+
+
+
+
+
+
+
+
+
+
+########Using the "t" function, which is outside the tidyverse. So 
+```{r d}
+Deflator <- t(Deflator)
+rownames(Deflator) = c(2013,2014,2015,2016,2017)
+
+Deflator <- tbl_df(Deflator)
+colnames(Deflator) = Deflator[1, ]
+Deflator = Deflator[-1, ]
+```
+
+
+
+Write csv files. Not working at the moment. xlsx package doesn't load.
+```{r}
+write.xlsx(Deflator, file="Output_Q_NA.xlsx",
+      sheetName="Deflator", append=FALSE)
+write.xlsx(Nominal_Q, file="Output_Q_NA.xlsx", 
+           sheetName="Nominal_Q", append=TRUE)
+write.xlsx(Real_Q, file="Output_Q_NA.xlsx", 
+           sheetName="Real_Q", append=TRUE)
+write.xlsx(Nominal_Y, file="Output_Q_NA.xlsx", 
+           sheetName="Nominal_Y", append=TRUE)
+write.xlsx(Real_Y, file="Output_Q_NA.xlsx", 
+           sheetName="Real_Y", append=TRUE)
+write.xlsx(Test.equality, file="Output_Q_NA.xlsx", 
+           sheetName="Summary", append=TRUE)
+```
+
+
+This does work. However, would like to have all the tabs combined.
+```{r }
+write.csv(Deflator, file =       "Output_Deflator.csv")
+write.csv(Nominal_Q, file =      "Output_Nominal_Q.csv")
+write.csv(Real_Q, file =         "Output_Real_Q.csv")
+write.csv(Nominal_Y, file =      "Output_Nominal_Y.csv")
+write.csv(Real_Y, file =         "Output_Real_Y.csv")
+write.csv(Test.equality, file =  "Output_Summary.csv")
+```
+
+
+To do: 
+- Need to include control to ensure that all deflators are 100 in year 2013.
+- Create grouping against column 'F" op publicatie level
+- In Test.equality$Value, need to sum up filled in fields and divide by total B1.g.
+- In Test.equality$Value, need to count filled in cells and display missing.
+- Find source of bug that prevents Knitr from creating the word document.
+- Output csv. files.
+- If possible e-mail markdown outputs to Herry via Outlook
+- Convert evrything to to time series
+- Start graphing.
