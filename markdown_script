@@ -6,8 +6,8 @@ output: word_document
 ---
 
 ```{r v}
-data1    <-  read.csv("Q_NO_DENTON.csv")
-data2    <-  read.csv("Q_DENTON.csv")
+data1    <-  read.csv("Q_DENTON.csv")
+data2    <-  read.csv("Q_NO_DENTON.csv")
 stavaza  <-  read.csv("stavazaR.csv")
 ```
 
@@ -211,6 +211,7 @@ rm(Check.Nominal.Y.2013)
 Test.equality$Check    <-Test.equality$Value==Test.equality$B1.g
 
 Test.equality          <- Test.equality[,c(1,3,4,5,2,6,7)]
+dplyr::arrange(Test.equality,Werk.ISIC)
 
 rm(stavaza)
 
@@ -249,6 +250,7 @@ Deflator.time<- select(Deflator.time,c(STATID,
                                        ISIC_DESCRIPTION
                                        ))
 Deflator.time          <- Deflator.time[,c(1,7,8,9,2,3,4,5,6)]
+dplyr::arrange(Deflator.time,TAB.CAT)
 
 # Nominal_Y
 Nominal_Y.time<- left_join(Nominal_Y.time,Test.equality,
@@ -264,6 +266,7 @@ Nominal_Y.time<- select(Nominal_Y.time,c(STATID,
                                        ISIC_DESCRIPTION
                                        ))
 Nominal_Y.time          <- Nominal_Y.time[,c(1,7,8,9,2,3,4,5,6)]
+dplyr::arrange(Nominal_Y.time,TAB.CAT)
 
 # Real_Y
 Real_Y.time<- left_join(Real_Y.time,Test.equality,
@@ -279,12 +282,31 @@ Real_Y.time<- select(Real_Y.time,c(STATID,
                                        ISIC_DESCRIPTION
                                        ))
 Real_Y.time          <- Real_Y.time[,c(1,7,8,9,2,3,4,5,6)]
+dplyr::arrange(Real_Y.time,TAB.CAT)
 ```
 
 
-Grouping by TAB.CAT
+Grouping by TAB.CAT for Publication tables
 ```{r}
+# Nominal_Y
+PUB_Nominal_Y.time <- group_by(Nominal_Y.time,TAB.CAT) %>%
+  summarise(TAB.CAT_DESCRIPTION=first(TAB.CAT_DESCRIPTION),
+    Y.2013=sum(Y_2013),
+    Y.2014=sum(Y_2014),
+    Y.2015=sum(Y_2015),
+    Y.2016=sum(Y_2016),
+    Y.2017=sum(Y_2017)
+  )
 
+# Real_Y
+PUB_Real_Y.time <- group_by(Real_Y.time,TAB.CAT) %>%
+  summarise(TAB.CAT_DESCRIPTION=first(TAB.CAT_DESCRIPTION),
+    Y.2013=sum(Y_2013),
+    Y.2014=sum(Y_2014),
+    Y.2015=sum(Y_2015),
+    Y.2016=sum(Y_2016),
+    Y.2017=sum(Y_2017)
+  )
 
 ```
 
@@ -328,6 +350,21 @@ write.csv(Real_Y, file =         "Output_Real_Y.csv")
 write.csv(Test.equality, file =  "Output_Summary.csv")
 ```
 
+Creating growth variables
+```{r}
+PUB_Nominal_Y.time$g.2017 <- (PUB_Nominal_Y.time$Y.2017/PUB_Nominal_Y.time$Y.2016-1)*100
+
+```
+
+Create Treemap
+```{r}
+ggplot2::ggplot(PUB_Nominal_Y.time, ggplot2::aes(area = Y.2017, fill = g.2017)) + 
+  geom_treemap()+
+  ggtitle("Nominal GDP 2017")+
+  geom_treemap_text(label = PUB_Nominal_Y.time$TAB.CAT_DESCRIPTION)
+
+
+```
 
 To do: 
 - Need to include control to ensure that all deflators are 100 in year 2013.
