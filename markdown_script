@@ -8,8 +8,8 @@ output: word_document
 ```{r v}
 data1    <-  read.csv("Q_DENTON.csv")
 data2    <-  read.csv("Q_NO_DENTON.csv")
+data3    <-  read.csv("Q_Weirdos.csv")
 stavaza  <-  read.csv("stavazaR.csv")
-Nominal.Y.compressed <- read.csv("compressed.csv")
 ```
 
 ## About this file
@@ -30,9 +30,11 @@ Load the dplyr package and transform the data into a tbl_df format and merge.
 library(dplyr)
 data1                  <- tbl_df(data1)
 data2                  <- tbl_df(data2)
-databind               <- bind_rows(data1,data2)
+data3                  <- tbl_df(data3)
+databind               <- bind_rows(data1,data2,data3)
 rm(data1)
 rm(data2)
+rm(data3)
 dplyr::arrange(databind,STATID)
 ```
 
@@ -217,6 +219,8 @@ Test.equality          <- Test.equality[,c(1,3,4,5,2,6,7)]
 
 rm(stavaza)
 
+Status.complete<- (length(which(Test.equality$Check=="TRUE")) + length(which(Test.equality$Check=="FALSE")))/length(Test.equality$Check)*100
+
 ```
 
 Convert from long form to wide format
@@ -287,7 +291,6 @@ Real_Y.time          <- Real_Y.time[,c(1,7,8,9,2,3,4,5,6)]
 dplyr::arrange(Real_Y.time,TAB.CAT)
 ```
 
-
 Grouping by TAB.CAT for Publication tables
 ```{r}
 # Nominal_Y
@@ -312,39 +315,27 @@ PUB_Real_Y.time <- group_by(Real_Y.time,TAB.CAT) %>%
 
 ```
 
-
-Left join compression
+Creating growth variables
 ```{r}
-Nominal.Y.compressed<- left_join(Nominal.Y.compressed,Test.equality,
-                   by=c("TAB.CAT_DESCRIPTION"="TAB.CAT_DESCRIPTION"))
-Nominal.Y.compressed<- select(Real_Y.time,c(STATID,
-                                       Y_2013,
-                                       Y_2014,
-                                       Y_2015,
-                                       Y_2016,
-                                       Y_2017,
-                                       TAB.CAT,
-                                       TAB.CAT_DESCRIPTION,
-                                       ISIC_DESCRIPTION
-                                       ))
-Real_Y.time          <- Real_Y.time[,c(1,7,8,9,2,3,4,5,6)]
+PUB_Nominal_Y.time$g.2014 <- (PUB_Nominal_Y.time$Y.2014/PUB_Nominal_Y.time$Y.2013-1)*100
+PUB_Nominal_Y.time$g.2015 <- (PUB_Nominal_Y.time$Y.2015/PUB_Nominal_Y.time$Y.2014-1)*100
+PUB_Nominal_Y.time$g.2016 <- (PUB_Nominal_Y.time$Y.2016/PUB_Nominal_Y.time$Y.2015-1)*100
+PUB_Nominal_Y.time$g.2017 <- (PUB_Nominal_Y.time$Y.2017/PUB_Nominal_Y.time$Y.2016-1)*100
 
+PUB_Real_Y.time$g.2014 <- (PUB_Real_Y.time$Y.2014/PUB_Real_Y.time$Y.2013-1)*100
+PUB_Real_Y.time$g.2015 <- (PUB_Real_Y.time$Y.2015/PUB_Real_Y.time$Y.2014-1)*100
+PUB_Real_Y.time$g.2016 <- (PUB_Real_Y.time$Y.2016/PUB_Real_Y.time$Y.2015-1)*100
+PUB_Real_Y.time$g.2017 <- (PUB_Real_Y.time$Y.2017/PUB_Real_Y.time$Y.2016-1)*100
 
-
-````
-
-
-########Using the "t" function, which is outside the tidyverse. So 
-```{r d}
-Deflator <- t(Deflator)
-rownames(Deflator) = c(2013,2014,2015,2016,2017)
-
-Deflator <- tbl_df(Deflator)
-colnames(Deflator) = Deflator[1, ]
-Deflator = Deflator[-1, ]
 ```
 
-
+Create Treemap
+```{r}
+ggplot2::ggplot(PUB_Nominal_Y.time, ggplot2::aes(area = Y.2017, fill = g.2017)) + 
+  geom_treemap()+
+  ggtitle("Nominal GDP 2017")+
+  geom_treemap_text(label = PUB_Nominal_Y.time$TAB.CAT_DESCRIPTION)
+```
 
 Write csv files. Not working at the moment. xlsx package doesn't load.
 ```{r}
@@ -371,28 +362,12 @@ write.csv(Real_Q, file =         "Output_Real_Q.csv")
 write.csv(Nominal_Y, file =      "Output_Nominal_Y.csv")
 write.csv(Real_Y, file =         "Output_Real_Y.csv")
 write.csv(Test.equality, file =  "Output_Summary.csv")
+write.csv(PUB_Nominal_Y.time, file =  "PUB_Nom.csv")
 ```
 
-Creating growth variables
-```{r}
-PUB_Nominal_Y.time$g.2017 <- (PUB_Nominal_Y.time$Y.2017/PUB_Nominal_Y.time$Y.2016-1)*100
-
-```
-
-Create Treemap
-```{r}
-ggplot2::ggplot(PUB_Nominal_Y.time, ggplot2::aes(area = Y.2017, fill = g.2017)) + 
-  geom_treemap()+
-  ggtitle("Nominal GDP 2017")+
-  geom_treemap_text(label = PUB_Nominal_Y.time$TAB.CAT_DESCRIPTION)
-
-
-```
 
 To do: 
 
-- In Test.equality$Value, need to sum up filled in fields and divide by total B1.g.
-- In Test.equality$Value, need to count filled in cells and display missing.
 - Find source of bug that prevents Knitr from creating the word document.
 - Output csv. files.
 - If possible e-mail markdown outputs to Herry via Outlook
