@@ -24,10 +24,10 @@ This is an R Markdown document. Markdown is a simple formatting syntax for autho
 Data should be in "Comma Seperated Values" (csv.) format to be loaded in and saved in the folder that is consistent with the Working Directory of th R session.
 
 
-Load the dplyr package and transform the data into a tbl_df format and merge.
-
+Load the required packages and transform the data into a tbl_df format. Data is then merged in a single table.
 ```{r a}
 library(dplyr)
+library(tidyr)
 data1                  <- tbl_df(data1)
 data2                  <- tbl_df(data2)
 data3                  <- tbl_df(data3)
@@ -38,10 +38,9 @@ rm(data3)
 dplyr::arrange(databind,STATID)
 ```
 
-Filtering data to contain the sections that we are interested seperatly
-
-
+Filtering data to contain the variables that we are interested in seperatly
 ```{r b}
+
 Nominal_Q              <- filter(databind,databind$Description=="Nominal VA")
 Nominal_Q$Description  <- NULL
 
@@ -58,164 +57,37 @@ Deflator               <- filter(databind,databind$Description=="Deflator")
 Deflator$Description   <- NULL
 
 rm(databind)
+```
 
-# Deflator
-Deflator.2013 <- filter(Deflator,Deflator$Period=="2013")
-Deflator.2013$Y_2013 <- Deflator.2013$Value
-Deflator.2013$Value  <- NULL
-Deflator.2013$Period <- NULL
-
-Deflator.2014 <- filter(Deflator,Deflator$Period=="2014")
-Deflator.2014$Y_2014 <- Deflator.2014$Value
-Deflator.2014$Value  <- NULL
-Deflator.2014$Period <- NULL
-
-Deflator.2015 <- filter(Deflator,Deflator$Period=="2015")
-Deflator.2015$Y_2015 <- Deflator.2015$Value
-Deflator.2015$Value  <- NULL
-Deflator.2015$Period <- NULL
-
-Deflator.2016 <- filter(Deflator,Deflator$Period=="2016")
-Deflator.2016$Y_2016 <- Deflator.2016$Value
-Deflator.2016$Value  <- NULL
-Deflator.2016$Period <- NULL
-
-Deflator.2017 <- filter(Deflator,Deflator$Period=="2017")
-Deflator.2017$Y_2017 <- Deflator.2017$Value
-Deflator.2017$Value  <- NULL
-Deflator.2017$Period <- NULL
-
-Deflator.time<-bind_cols(Deflator.2013,
-                         Deflator.2014,
-                         Deflator.2015,
-                         Deflator.2016,
-                         Deflator.2017)
-Deflator.time$STATID1<- NULL
-Deflator.time$STATID2<- NULL
-Deflator.time$STATID3<- NULL
-Deflator.time$STATID4<- NULL
-
-rm(Deflator.2013)
-rm(Deflator.2014)
-rm(Deflator.2015)
-rm(Deflator.2016)
-rm(Deflator.2017)
-
-
-# Nominal_Y
-Nominal_Y.2013 <- filter(Nominal_Y,Nominal_Y$Period=="2013")
-Nominal_Y.2013$Y_2013 <- Nominal_Y.2013$Value
-Nominal_Y.2013$Value  <- NULL
-Nominal_Y.2013$Period <- NULL
-
-Nominal_Y.2014 <- filter(Nominal_Y,Nominal_Y$Period=="2014")
-Nominal_Y.2014$Y_2014 <- Nominal_Y.2014$Value
-Nominal_Y.2014$Value  <- NULL
-Nominal_Y.2014$Period <- NULL
-
-Nominal_Y.2015 <- filter(Nominal_Y,Nominal_Y$Period=="2015")
-Nominal_Y.2015$Y_2015 <- Nominal_Y.2015$Value
-Nominal_Y.2015$Value  <- NULL
-Nominal_Y.2015$Period <- NULL
-
-Nominal_Y.2016 <- filter(Nominal_Y,Nominal_Y$Period=="2016")
-Nominal_Y.2016$Y_2016 <- Nominal_Y.2016$Value
-Nominal_Y.2016$Value  <- NULL
-Nominal_Y.2016$Period <- NULL
-
-Nominal_Y.2017 <- filter(Nominal_Y,Nominal_Y$Period=="2017")
-Nominal_Y.2017$Y_2017 <- Nominal_Y.2017$Value
-Nominal_Y.2017$Value  <- NULL
-Nominal_Y.2017$Period <- NULL
-
-Nominal_Y.time<-bind_cols(Nominal_Y.2013,
-                         Nominal_Y.2014,
-                         Nominal_Y.2015,
-                         Nominal_Y.2016,
-                         Nominal_Y.2017)
-Nominal_Y.time$STATID1<- NULL
-Nominal_Y.time$STATID2<- NULL
-Nominal_Y.time$STATID3<- NULL
-Nominal_Y.time$STATID4<- NULL
-
-rm(Nominal_Y.2013)
-rm(Nominal_Y.2014)
-rm(Nominal_Y.2015)
-rm(Nominal_Y.2016)
-rm(Nominal_Y.2017)
-
-#Real_Y
-Real_Y.2013 <- filter(Real_Y,Real_Y$Period=="2013")
-Real_Y.2013$Y_2013 <- Real_Y.2013$Value
-Real_Y.2013$Value  <- NULL
-Real_Y.2013$Period <- NULL
-
-Real_Y.2014 <- filter(Real_Y,Real_Y$Period=="2014")
-Real_Y.2014$Y_2014 <- Real_Y.2014$Value
-Real_Y.2014$Value  <- NULL
-Real_Y.2014$Period <- NULL
-
-Real_Y.2015 <- filter(Real_Y,Real_Y$Period=="2015")
-Real_Y.2015$Y_2015 <- Real_Y.2015$Value
-Real_Y.2015$Value  <- NULL
-Real_Y.2015$Period <- NULL
-
-Real_Y.2016 <- filter(Real_Y,Real_Y$Period=="2016")
-Real_Y.2016$Y_2016 <- Real_Y.2016$Value
-Real_Y.2016$Value  <- NULL
-Real_Y.2016$Period <- NULL
-
-Real_Y.2017 <- filter(Real_Y,Real_Y$Period=="2017")
-Real_Y.2017$Y_2017 <- Real_Y.2017$Value
-Real_Y.2017$Value  <- NULL
-Real_Y.2017$Period <- NULL
-
-Real_Y.time<-bind_cols(Real_Y.2013,
-                         Real_Y.2014,
-                         Real_Y.2015,
-                         Real_Y.2016,
-                         Real_Y.2017)
-Real_Y.time$STATID1<- NULL
-Real_Y.time$STATID2<- NULL
-Real_Y.time$STATID3<- NULL
-Real_Y.time$STATID4<- NULL
-
-rm(Real_Y.2013)
-rm(Real_Y.2014)
-rm(Real_Y.2015)
-rm(Real_Y.2016)
-rm(Real_Y.2017)
-
-#Nominal_Q
-
-
-
-#Real_Q
-
-#Needs to be continued
-
+Long to wide format
+```{r c}
+Deflator   <-spread(Deflator,Period,Value)
+Nominal_Q  <-spread(Nominal_Q,Period,Value)
+Nominal_Y  <-spread(Nominal_Y,Period,Value)
+Real_Q     <-spread(Real_Q,Period,Value)
+Real_Y     <-spread(Real_Y,Period,Value)
 ```
 
 Creating a check to verify whether the year figures are consistent with Stavaza
 ```{r c}
-Check.Nominal.Y.2013   <-filter(Nominal_Y,Period=="2013")
+Check.Nominal.Y.2013   <-select(Nominal_Y,STATID,`2013`)
 
 as.character(stavaza$Werk.ISIC)
  
 stavaza                <- select(stavaza,
                            c(Werk.ISIC,B1.g,TAB.CAT,TAB.CAT_DESCRIPTION,ISIC_DESCRIPTION))
 
-Check.Nominal.Y.2013   <- select(Check.Nominal.Y.2013,c(STATID,Value))
+Check.Nominal.Y.2013   <- select(Check.Nominal.Y.2013,c(STATID,`2013`))
 
 Test.equality          <- left_join(stavaza,Check.Nominal.Y.2013,
                    by=c("Werk.ISIC"="STATID"))
 
 rm(Check.Nominal.Y.2013)
 
-Test.equality$Check    <-Test.equality$Value==Test.equality$B1.g
+Test.equality$Check    <-Test.equality$`2013`==Test.equality$B1.g
 
 Test.equality          <- Test.equality[,c(1,3,4,5,2,6,7)]
-# Is this really necesarry? dplyr::arrange(Test.equality,Werk.ISIC)
+dplyr::arrange(Test.equality,Werk.ISIC)
 
 rm(stavaza)
 
@@ -223,29 +95,19 @@ Status.complete<- (length(which(Test.equality$Check=="TRUE")) + length(which(Tes
 
 ```
 
-Convert from long form to wide format
+Need to add code to correctly display year name
 ```{r d}
-library(tidyr)
-Deflator   <-spread(Deflator,STATID,Value)
-Nominal_Q  <-spread(Nominal_Q,STATID,Value)
-Nominal_Y  <-spread(Nominal_Y,STATID,Value)
-Real_Q     <-spread(Real_Q,STATID,Value)
-Real_Y     <-spread(Real_Y,STATID,Value)
-
-Deflator$Period  <- c(2013,2014,2015,2016,2017)
-Real_Y$Period    <- c(2013,2014,2015,2016,2017)
-Nominal_Y$Period <- c(2013,2014,2015,2016,2017)
-
-## Need to add quarterly series
-
+Deflator  <- setNames(Deflator,  c("STATID","Y_2013","Y_2014","Y_2015","Y_2016","Y_2017"))
+Nominal_Y <- setNames(Nominal_Y, c("STATID","Y_2013","Y_2014","Y_2015","Y_2016","Y_2017"))
+Real_Y    <- setNames(Real_Y,    c("STATID","Y_2013","Y_2014","Y_2015","Y_2016","Y_2017"))
 ```
 
 Add series name
 ```{R}
 # Deflator
-Deflator.time<- left_join(Deflator.time,Test.equality,
+Deflator<- left_join(Deflator,Test.equality,
                    by=c("STATID"="Werk.ISIC"))
-Deflator.time<- select(Deflator.time,c(STATID,
+Deflator<- select(Deflator,c(STATID,
                                        Y_2013,
                                        Y_2014,
                                        Y_2015,
@@ -255,13 +117,13 @@ Deflator.time<- select(Deflator.time,c(STATID,
                                        TAB.CAT_DESCRIPTION,
                                        ISIC_DESCRIPTION
                                        ))
-Deflator.time          <- Deflator.time[,c(1,7,8,9,2,3,4,5,6)]
-dplyr::arrange(Deflator.time,TAB.CAT)
+Deflator         <- Deflator[,c(1,7,8,9,2,3,4,5,6)]
+dplyr::arrange(Deflator,TAB.CAT)
 
 # Nominal_Y
-Nominal_Y.time<- left_join(Nominal_Y.time,Test.equality,
+Nominal_Y<- left_join(Nominal_Y,Test.equality,
                    by=c("STATID"="Werk.ISIC"))
-Nominal_Y.time<- select(Nominal_Y.time,c(STATID,
+Nominal_Y<- select(Nominal_Y,c(STATID,
                                        Y_2013,
                                        Y_2014,
                                        Y_2015,
@@ -271,13 +133,13 @@ Nominal_Y.time<- select(Nominal_Y.time,c(STATID,
                                        TAB.CAT_DESCRIPTION,
                                        ISIC_DESCRIPTION
                                        ))
-Nominal_Y.time          <- Nominal_Y.time[,c(1,7,8,9,2,3,4,5,6)]
-dplyr::arrange(Nominal_Y.time,TAB.CAT)
+Nominal_Y          <- Nominal_Y[,c(1,7,8,9,2,3,4,5,6)]
+dplyr::arrange(Nominal_Y,TAB.CAT)
 
 # Real_Y
-Real_Y.time<- left_join(Real_Y.time,Test.equality,
+Real_Y<- left_join(Real_Y,Test.equality,
                    by=c("STATID"="Werk.ISIC"))
-Real_Y.time<- select(Real_Y.time,c(STATID,
+Real_Y<- select(Real_Y,c(STATID,
                                        Y_2013,
                                        Y_2014,
                                        Y_2015,
@@ -287,14 +149,14 @@ Real_Y.time<- select(Real_Y.time,c(STATID,
                                        TAB.CAT_DESCRIPTION,
                                        ISIC_DESCRIPTION
                                        ))
-Real_Y.time          <- Real_Y.time[,c(1,7,8,9,2,3,4,5,6)]
-dplyr::arrange(Real_Y.time,TAB.CAT)
+Real_Y          <- Real_Y[,c(1,7,8,9,2,3,4,5,6)]
+dplyr::arrange(Real_Y,TAB.CAT)
 ```
 
 Grouping by TAB.CAT for Publication tables
 ```{r}
 # Nominal_Y
-PUB_Nominal_Y.time <- group_by(Nominal_Y.time,TAB.CAT) %>%
+PUB_Nominal_Y <- group_by(Nominal_Y,TAB.CAT) %>%
   summarise(TAB.CAT_DESCRIPTION=first(TAB.CAT_DESCRIPTION),
     Y.2013=sum(Y_2013),
     Y.2014=sum(Y_2014),
@@ -304,7 +166,7 @@ PUB_Nominal_Y.time <- group_by(Nominal_Y.time,TAB.CAT) %>%
   )
 
 # Real_Y
-PUB_Real_Y.time <- group_by(Real_Y.time,TAB.CAT) %>%
+PUB_Real_Y <- group_by(Real_Y,TAB.CAT) %>%
   summarise(TAB.CAT_DESCRIPTION=first(TAB.CAT_DESCRIPTION),
     Y.2013=sum(Y_2013),
     Y.2014=sum(Y_2014),
@@ -312,29 +174,27 @@ PUB_Real_Y.time <- group_by(Real_Y.time,TAB.CAT) %>%
     Y.2016=sum(Y_2016),
     Y.2017=sum(Y_2017)
   )
-
 ```
 
 Creating growth variables
 ```{r}
-PUB_Nominal_Y.time$g.2014 <- (PUB_Nominal_Y.time$Y.2014/PUB_Nominal_Y.time$Y.2013-1)*100
-PUB_Nominal_Y.time$g.2015 <- (PUB_Nominal_Y.time$Y.2015/PUB_Nominal_Y.time$Y.2014-1)*100
-PUB_Nominal_Y.time$g.2016 <- (PUB_Nominal_Y.time$Y.2016/PUB_Nominal_Y.time$Y.2015-1)*100
-PUB_Nominal_Y.time$g.2017 <- (PUB_Nominal_Y.time$Y.2017/PUB_Nominal_Y.time$Y.2016-1)*100
+PUB_Nominal_Y$g.2014 <- (PUB_Nominal_Y$Y.2014/PUB_Nominal_Y$Y.2013-1)*100
+PUB_Nominal_Y$g.2015 <- (PUB_Nominal_Y$Y.2015/PUB_Nominal_Y$Y.2014-1)*100
+PUB_Nominal_Y$g.2016 <- (PUB_Nominal_Y$Y.2016/PUB_Nominal_Y$Y.2015-1)*100
+PUB_Nominal_Y$g.2017 <- (PUB_Nominal_Y$Y.2017/PUB_Nominal_Y$Y.2016-1)*100
 
-PUB_Real_Y.time$g.2014 <- (PUB_Real_Y.time$Y.2014/PUB_Real_Y.time$Y.2013-1)*100
-PUB_Real_Y.time$g.2015 <- (PUB_Real_Y.time$Y.2015/PUB_Real_Y.time$Y.2014-1)*100
-PUB_Real_Y.time$g.2016 <- (PUB_Real_Y.time$Y.2016/PUB_Real_Y.time$Y.2015-1)*100
-PUB_Real_Y.time$g.2017 <- (PUB_Real_Y.time$Y.2017/PUB_Real_Y.time$Y.2016-1)*100
-
+PUB_Real_Y$g.2014 <- (PUB_Real_Y$Y.2014/PUB_Real_Y$Y.2013-1)*100
+PUB_Real_Y$g.2015 <- (PUB_Real_Y$Y.2015/PUB_Real_Y$Y.2014-1)*100
+PUB_Real_Y$g.2016 <- (PUB_Real_Y$Y.2016/PUB_Real_Y$Y.2015-1)*100
+PUB_Real_Y$g.2017 <- (PUB_Real_Y$Y.2017/PUB_Real_Y$Y.2016-1)*100
 ```
 
 Create Treemap
 ```{r}
-ggplot2::ggplot(PUB_Nominal_Y.time, ggplot2::aes(area = Y.2017, fill = g.2017)) + 
+ggplot2::ggplot(PUB_Nominal_Y, ggplot2::aes(area = Y.2017, fill = g.2017)) + 
   geom_treemap()+
   ggtitle("Nominal GDP 2017")+
-  geom_treemap_text(label = PUB_Nominal_Y.time$TAB.CAT_DESCRIPTION)
+  geom_treemap_text(label = PUB_Nominal_Y$TAB.CAT_DESCRIPTION)
 ```
 
 Write csv files. Not working at the moment. xlsx package doesn't load.
