@@ -26,6 +26,7 @@ Load the required packages and transform the data into a tbl_df format. Data is 
 library(dplyr)
 library(tidyr)
 library(formattable)
+library(dygraphs)
 data1                  <- tbl_df(data1)
 data2                  <- tbl_df(data2)
 data3                  <- tbl_df(data3)
@@ -148,6 +149,12 @@ Real_Y<- select(Real_Y,c(STATID,
                                        ))
 Real_Y          <- Real_Y[,c(1,7,8,9,2,3,4,5,6)]
 dplyr::arrange(Real_Y,TAB.CAT)
+
+# Nominal_Q
+Nominal_Q<- left_join(Nominal_Q,Test.equality,
+                   by=c("STATID"="Werk.ISIC"))
+Nominal_Q          <- Nominal_Q[,c(22,23,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21)]
+dplyr::arrange(Nominal_Q,TAB.CAT)
 ```
 
 Grouping by TAB.CAT for Publication tables
@@ -171,6 +178,33 @@ PUB_Real_Y <- group_by(Real_Y,TAB.CAT) %>%
     Y.2016=sum(Y_2016),
     Y.2017=sum(Y_2017)
   )
+
+# Nominal_Q
+PUB_Nominal_Q <- group_by(Nominal_Q,TAB.CAT) %>%
+  summarise(TAB.CAT_DESCRIPTION=first(TAB.CAT_DESCRIPTION),
+    Q.2013.1=sum(`2013-1`),
+    Q.2013.2=sum(`2013-2`),
+    Q.2013.3=sum(`2013-3`),
+    Q.2013.4=sum(`2013-4`),
+    Q.2014.1=sum(`2014-1`),
+    Q.2014.2=sum(`2014-2`),
+    Q.2014.3=sum(`2014-3`),
+    Q.2014.4=sum(`2014-4`),
+    Q.2015.1=sum(`2015-1`),
+    Q.2015.2=sum(`2015-2`),
+    Q.2015.3=sum(`2015-3`),
+    Q.2015.4=sum(`2015-4`),
+    Q.2016.1=sum(`2016-1`),
+    Q.2016.2=sum(`2016-2`),
+    Q.2016.3=sum(`2016-3`),
+    Q.2016.4=sum(`2016-4`),
+    Q.2017.1=sum(`2017-1`),
+    Q.2017.2=sum(`2017-2`),
+    Q.2017.3=sum(`2017-3`),
+    Q.2017.4=sum(`2017-4`)
+  )
+
+
 ```
 
 Creating growth variables
@@ -204,7 +238,6 @@ write.csv(Real_Q, file =         "Output_Real_Q.csv")
 write.csv(Nominal_Y, file =      "Output_Nominal_Y.csv")
 write.csv(Real_Y, file =         "Output_Real_Y.csv")
 write.csv(Test.equality, file =  "Output_Summary.csv")
-write.csv(PUB_Nominal_Y.time, file =  "PUB_Nom.csv")
 ```
 
 Creating publication tables
@@ -233,10 +266,46 @@ PUB_Nominal_Y.L <-select(PUB_Nominal_Y,
                          )
 PUB_Nominal_Y.L[,-1] <-round(PUB_Nominal_Y.L[,-1],2)
 
-PUB_Nominal_Y.T <-select(PUB_Nominal_Y.L,`2013`,`2014`,`2015`,`2016`,`2017`)%>%
-  summarise_all(PUB_Nominal_Y.L,funs(sum))
+PUB_Nominal_Q[,-1] <-round(PUB_Nominal_Q[,-1],2)
+
 ```
 
+```{r }
+write.csv(PUB_Nominal_Y.L, file =  "PUB_Nom_Y_L.csv")
+write.csv(PUB_Nominal_Q, file =  "PUB_Nom_Q.csv")
+```
+Creating aditional variables
+```{r }
+CBS.Nom.year          <-c(4836.2,4949.8,5225.9,5308.9,5476.0)
+CFT.gewone.diensten   <-c(-287,-269,-155,-135,-153)
+CFT.kapitaaldiensten  <-c(413,442,488,338,534)
+CFT.Nominal           <-c(46210,47430,48180,47390,48630)
+LAFT                  <-c(0,-3.7,-2,-0.5,0.5)
+CFT.deficit.feitelijk <-c(-3,-1.8,-3.1,-2.8)
+CBA.Nom.year          <-c(4618.28796359993,4742.50216019128,4817.75420489927,4755.63855767319,4793.04253070106)
+
+CBS.Nom.year<-ts(CBS.Nom.year,frequency = 1,start = 2013)
+CFT.gewone.diensten<-ts(CFT.gewone.diensten,frequency = 1,start = 2013)
+CFT.kapitaaldiensten<-ts(CFT.kapitaaldiensten,frequency = 1,start = 2013)
+CFT.Nominal<-ts(CFT.Nominal,frequency = 1,start = 2013)
+LAFT<-ts(LAFT, frequency = 1,start=2013)
+CFT.deficit.feitelijk<-ts(CFT.deficit.feitelijk, frequency = 1,start=2013)
+CBA.Nom.year<-ts(CBA.Nom.year, frequency = 1,start=2013)
+
+CFT.deficit <-CFT.gewone.diensten- CFT.kapitaaldiensten
+CFT.deficit.GDP <- round(CFT.deficit / CFT.Nominal *100, digits = 1)
+```
+Converting times series to nice graphs
+```{r }
+Nominal.level <-cbind(CBS.Nom.year,CBA.Nom.year)
+dygraph(Nominal.level,
+        main="Nominal GDP (in Afl.)",
+        ylab="in Afl.",
+        xlab="Years")%>%
+  dyAxis("x", drawGrid = FALSE)%>%
+  dyOptions(axisLineColor = "navy", 
+            gridLineColor = "lightblue") 
+```
 To do: 
 - Find source of bug that prevents Knitr from creating the word document.
 - If possible e-mail markdown outputs to Herry via Outlook
