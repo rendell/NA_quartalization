@@ -18,16 +18,14 @@ This is an explanatory note for the steps to convert quarterly output informatio
 
 This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
 
-
-
 ## Reading in the data (not working in the Shiny code)
 Data should be in "Comma Seperated Values" (csv.) format to be loaded in and saved in the folder that is consistent with the Working Directory of th R session.
-
 
 Load the required packages and transform the data into a tbl_df format. Data is then merged in a single table.
 ```{r a}
 library(dplyr)
 library(tidyr)
+library(formattable)
 data1                  <- tbl_df(data1)
 data2                  <- tbl_df(data2)
 data3                  <- tbl_df(data3)
@@ -80,7 +78,7 @@ stavaza                <- select(stavaza,
 Check.Nominal.Y.2013   <- select(Check.Nominal.Y.2013,c(STATID,`2013`))
 
 Test.equality          <- left_join(stavaza,Check.Nominal.Y.2013,
-                   by=c("Werk.ISIC"="STATID"))
+                            by=c("Werk.ISIC"="STATID"))
 
 rm(Check.Nominal.Y.2013)
 
@@ -91,8 +89,7 @@ dplyr::arrange(Test.equality,Werk.ISIC)
 
 rm(stavaza)
 
-Status.complete<- (length(which(Test.equality$Check=="TRUE")) + length(which(Test.equality$Check=="FALSE")))/length(Test.equality$Check)*100
-
+Status.complete<- round(sum(Test.equality$`2013`,na.rm = TRUE)/sum(Test.equality$B1.g,na.rm = TRUE), digits = 2)
 ```
 
 Need to add code to correctly display year name
@@ -178,43 +175,28 @@ PUB_Real_Y <- group_by(Real_Y,TAB.CAT) %>%
 
 Creating growth variables
 ```{r}
-PUB_Nominal_Y$g.2014 <- (PUB_Nominal_Y$Y.2014/PUB_Nominal_Y$Y.2013-1)*100
-PUB_Nominal_Y$g.2015 <- (PUB_Nominal_Y$Y.2015/PUB_Nominal_Y$Y.2014-1)*100
-PUB_Nominal_Y$g.2016 <- (PUB_Nominal_Y$Y.2016/PUB_Nominal_Y$Y.2015-1)*100
-PUB_Nominal_Y$g.2017 <- (PUB_Nominal_Y$Y.2017/PUB_Nominal_Y$Y.2016-1)*100
+PUB_Nominal_Y$g.2014  <- (PUB_Nominal_Y$Y.2014/PUB_Nominal_Y$Y.2013-1)*100
+PUB_Nominal_Y$g.2015  <- (PUB_Nominal_Y$Y.2015/PUB_Nominal_Y$Y.2014-1)*100
+PUB_Nominal_Y$g.2016  <- (PUB_Nominal_Y$Y.2016/PUB_Nominal_Y$Y.2015-1)*100
+PUB_Nominal_Y$g.2017  <- (PUB_Nominal_Y$Y.2017/PUB_Nominal_Y$Y.2016-1)*100
 
-PUB_Real_Y$g.2014 <- (PUB_Real_Y$Y.2014/PUB_Real_Y$Y.2013-1)*100
-PUB_Real_Y$g.2015 <- (PUB_Real_Y$Y.2015/PUB_Real_Y$Y.2014-1)*100
-PUB_Real_Y$g.2016 <- (PUB_Real_Y$Y.2016/PUB_Real_Y$Y.2015-1)*100
-PUB_Real_Y$g.2017 <- (PUB_Real_Y$Y.2017/PUB_Real_Y$Y.2016-1)*100
+PUB_Real_Y$g.2014     <- (PUB_Real_Y$Y.2014/PUB_Real_Y$Y.2013-1)*100
+PUB_Real_Y$g.2015     <- (PUB_Real_Y$Y.2015/PUB_Real_Y$Y.2014-1)*100
+PUB_Real_Y$g.2016     <- (PUB_Real_Y$Y.2016/PUB_Real_Y$Y.2015-1)*100
+PUB_Real_Y$g.2017     <- (PUB_Real_Y$Y.2017/PUB_Real_Y$Y.2016-1)*100
 ```
 
 Create Treemap
 ```{r}
-ggplot2::ggplot(PUB_Nominal_Y, ggplot2::aes(area = Y.2017, fill = g.2017)) + 
-  geom_treemap()+
-  ggtitle("Nominal GDP 2017")+
-  geom_treemap_text(label = PUB_Nominal_Y$TAB.CAT_DESCRIPTION)
+ggplot2::ggplot(PUB_Nominal_Y, ggplot2::aes(area = Y.2017, 
+                                            fill = g.2017,
+                                            label=TAB.CAT_DESCRIPTION)) + 
+                                        geom_treemap()+
+                                        ggtitle("Nominal GDP 2017")+
+                                        geom_treemap_text()
 ```
 
-Write csv files. Not working at the moment. xlsx package doesn't load.
-```{r}
-write.xlsx(Deflator, file="Output_Q_NA.xlsx",
-      sheetName="Deflator", append=FALSE)
-write.xlsx(Nominal_Q, file="Output_Q_NA.xlsx", 
-           sheetName="Nominal_Q", append=TRUE)
-write.xlsx(Real_Q, file="Output_Q_NA.xlsx", 
-           sheetName="Real_Q", append=TRUE)
-write.xlsx(Nominal_Y, file="Output_Q_NA.xlsx", 
-           sheetName="Nominal_Y", append=TRUE)
-write.xlsx(Real_Y, file="Output_Q_NA.xlsx", 
-           sheetName="Real_Y", append=TRUE)
-write.xlsx(Test.equality, file="Output_Q_NA.xlsx", 
-           sheetName="Summary", append=TRUE)
-```
-
-
-This does work. However, would like to have all the tabs combined.
+Create output in csv. Works. However, would like to have all the tabs combined.
 ```{r }
 write.csv(Deflator, file =       "Output_Deflator.csv")
 write.csv(Nominal_Q, file =      "Output_Nominal_Q.csv")
@@ -225,11 +207,37 @@ write.csv(Test.equality, file =  "Output_Summary.csv")
 write.csv(PUB_Nominal_Y.time, file =  "PUB_Nom.csv")
 ```
 
+Creating publication tables
+```{r }
+library(formattable)
+PUB_Nominal_Y  <- setNames(PUB_Nominal_Y,  c("Category",
+                                             "Sector description",
+                                             "2013",
+                                             "2014",
+                                             "2015",
+                                             "2016",
+                                             "2017",
+                                             "G.2014",
+                                             "G.2015",
+                                             "G.2016",
+                                             "G.2017"
+                                             ))
+
+PUB_Nominal_Y.L <-select(PUB_Nominal_Y,
+                         'Sector description',
+                         '2013',
+                         '2014',
+                         '2015',
+                         '2016',
+                         '2017'
+                         )
+PUB_Nominal_Y.L[,-1] <-round(PUB_Nominal_Y.L[,-1],2)
+
+PUB_Nominal_Y.T <-select(PUB_Nominal_Y.L,`2013`,`2014`,`2015`,`2016`,`2017`)%>%
+  summarise_all(PUB_Nominal_Y.L,funs(sum))
+```
 
 To do: 
-
 - Find source of bug that prevents Knitr from creating the word document.
-- Output csv. files.
 - If possible e-mail markdown outputs to Herry via Outlook
 - Convert evrything to to time series
-- Start graphing.
