@@ -6,10 +6,10 @@ output: word_document
 ---
 
 ```{r, eval = FALSE, warning = FALSE, error = FALSE}
-data1    <-  read.csv("Q_DENTON.csv")
-data2    <-  read.csv("Q_NO_DENTON.csv")
-data3    <-  read.csv("Q_Weirdos.csv")
-stavaza  <-  read.csv("stavazaR.csv")
+data1    <-  read.csv("Q_DENTON.csv", stringsAsFactors = FALSE)
+data1$Value<-as.numeric(data1$Value)
+data2    <-  read.csv("Q_NO_DENTON.csv", stringsAsFactors = FALSE)
+stavaza  <-  read.csv("stavazaR.csv", stringsAsFactors = FALSE)
 ```
 
 ## About this file
@@ -37,11 +37,9 @@ Combining data sets to a single dataframe
 ```{r, results='hide', warning = FALSE, error = FALSE, message=FALSE}
 data1                  <- tbl_df(data1)
 data2                  <- tbl_df(data2)
-data3                  <- tbl_df(data3)
-databind               <- bind_rows(data1,data2,data3)
+databind               <- bind_rows(data1,data2)
 rm(data1)
 rm(data2)
-rm(data3)
 dplyr::arrange(databind,STATID)
 ```
 
@@ -253,6 +251,14 @@ ggplot2::ggplot(PUB_Nominal_Y, ggplot2::aes(area = Y.2017,
                                         geom_treemap_text()
 ```
 
+One more consistency check, checking the sum of the quarterly nominal GDP whether it adds up to the right amount for 2013.
+```{r}
+Test.equality <- Test.equality[-57, ]
+Test.equality$q.check <- Nominal_Q$`2013-1`+Nominal_Q$`2013-2`+Nominal_Q$`2013-3`+Nominal_Q$`2013-4`
+Test.equality$Check2    <-Test.equality$`2013`==Test.equality$q.check
+````
+
+
 Create output in csv. Works. However, would like to have all the tabs combined.
 ```{r}
 write.csv(Deflator, 
@@ -402,6 +408,3 @@ dygraph(Nominal.level,
   dyOptions(axisLineColor = "navy", 
             gridLineColor = "lightblue") 
 ```
-To do: 
-- Find source of bug that prevents Knitr from creating the word document.
-- If possible e-mail markdown outputs to Herry via Outlook
