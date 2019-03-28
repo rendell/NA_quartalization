@@ -1,7 +1,7 @@
 ---
 title: "Quarterly output manipulation National Accounts"
 author: "Rendell E . de Kort"
-date: "January 31, 2019"
+date: "March 28, 2019"
 output: word_document
 ---
 
@@ -11,6 +11,7 @@ data1$Value<-as.numeric(data1$Value)
 data2    <-  read.csv("Q_NO_DENTON.csv", stringsAsFactors = FALSE)
 stavaza  <-  read.csv("stavazaR.csv", stringsAsFactors = FALSE)
 ```
+
 
 ## About this file
 
