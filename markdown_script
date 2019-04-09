@@ -362,6 +362,49 @@ First step is to perform the calculation on variables pertaining to the "Own" de
 
 
 ```{r}
+Vector_Own <- if_else(Nominal_Q$Deflator.2=="Own",1,0)
+Vector_Group <- if_else(Nominal_Q$Deflator.2=="Group",1,0)
+
+
+Own <-(select(Nominal_Q,-c(STATID,TAB.CAT,Deflator.1,Deflator.2,TAB.CAT_DESCRIPTION,ISIC_DESCRIPTION))/ 
+                select(Real_Q,-c(STATID,TAB.CAT,Deflator.1,Deflator.2,TAB.CAT_DESCRIPTION,ISIC_DESCRIPTION))*
+         Vector_Own)
+                
+Own <-add_column(Own,Deflator.2=Nominal_Q$Deflator.2) 
+
+# Group 
+
+Group_Nom_Q <- Nominal_Q %>%
+  select(-c(STATID,Deflator.1,Deflator.2,TAB.CAT_DESCRIPTION,ISIC_DESCRIPTION))%>%
+  group_by(TAB.CAT) %>%
+  summarise(TAB.CAT=first(TAB.CAT),
+            N.2013.1=sum(`2013-1`),
+            N.2013.2=sum(`2013-2`),
+            N.2013.3=sum(`2013-3`),
+            N.2013.4=sum(`2013-4`),
+            N.2014.1=sum(`2014-1`),
+            N.2014.2=sum(`2014-2`),
+            N.2014.3=sum(`2014-3`),
+            N.2014.4=sum(`2014-4`),
+            N.2015.1=sum(`2015-1`),
+            N.2015.2=sum(`2015-2`),
+            N.2015.3=sum(`2015-3`),
+            N.2015.4=sum(`2015-4`),
+            N.2016.1=sum(`2016-1`),
+            N.2016.2=sum(`2016-2`),
+            N.2016.3=sum(`2016-3`),
+            N.2016.4=sum(`2016-4`),
+            N.2017.1=sum(`2017-1`),
+            N.2017.2=sum(`2017-2`),
+            N.2017.3=sum(`2017-3`),
+            N.2017.4=sum(`2017-4`)
+            )
+ 
+
+
+
+
+
 
 Own$'D.2013-1'[which(Own$Deflator.2 == "Own")] <- Own$'2013-1'/Own$'2013-11'*100
 
