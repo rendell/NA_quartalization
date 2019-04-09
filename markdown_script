@@ -58,15 +58,15 @@ Nominal_Y$Description  <- NULL
 Real_Y                 <- filter(databind,databind$Description=="B Real")
 Real_Y$Description     <- NULL
 
-Deflator               <- filter(databind,databind$Description=="Deflator")
-Deflator$Description   <- NULL
+Deflator_Y               <- filter(databind,databind$Description=="Deflator")
+Deflator_Y$Description   <- NULL
 
 rm(databind)
 ```
 
 Long to wide format
 ```{r}
-Deflator   <-spread(Deflator,Period,Value)
+Deflator_Y   <-spread(Deflator_Y,Period,Value)
 Nominal_Q  <-spread(Nominal_Q,Period,Value)
 Nominal_Y  <-spread(Nominal_Y,Period,Value)
 Real_Q     <-spread(Real_Q,Period,Value)
@@ -98,7 +98,7 @@ rm(stavaza_temp)
 
 Changing the variable names for consistency: 
 ```{r}
-Deflator  <- setNames(Deflator,  c("STATID",
+Deflator_Y  <- setNames(Deflator_Y,  c("STATID",
                                    "Y_2013",
                                    "Y_2014",
                                    "Y_2015",
@@ -124,9 +124,9 @@ Real_Y    <- setNames(Real_Y,    c("STATID",
 The left_join function merges two data sets and after that we select and arrange the variables 
 ```{r, results = 'hide'}
 # Deflator
-Deflator<- left_join(Deflator,stavaza,
+Deflator_Y<- left_join(Deflator_Y,stavaza,
                    by=c("STATID"="Werk.ISIC"))
-Deflator<- select(Deflator,c(STATID,
+Deflator_Y<- select(Deflator_Y,c(STATID,
                              TAB.CAT,
                              Deflator.1,
                              Deflator.2,
@@ -138,7 +138,7 @@ Deflator<- select(Deflator,c(STATID,
                                        Y_2016,
                                        Y_2017
                                        ))
-dplyr::arrange(Deflator,TAB.CAT)
+dplyr::arrange(Deflator_Y,TAB.CAT)
 
 # Nominal_Y
 Nominal_Y<- left_join(Nominal_Y,stavaza,
@@ -286,7 +286,7 @@ write.csv(Test.equality,
 Creating publication tables
 ```{r}
 PUB_Nominal_Y  <- setNames(PUB_Nominal_Y,
-                           c("Category",
+                           c(
                              "Sector description",
                                              "2013",
                                              "2014",
@@ -325,38 +325,6 @@ CBS.Nom.year          <-c(4836.2,
                           5476.0
                           )
 
-CFT.gewone.diensten   <-c(-287,
-                          -269,
-                          -155,
-                          -135,
-                          -153
-                          )
-
-CFT.kapitaaldiensten  <-c(413,
-                          442,
-                          488,
-                          338,
-                          534
-                          )
-
-CFT.Nominal           <-c(46210,
-                          47430,
-                          48180,
-                          47390,
-                          48630
-                          )
-
-LAFT                  <-c(0,
-                          -3.7,
-                          -2,
-                          -0.5,
-                          0.5
-                          )
-CFT.deficit.feitelijk <-c(-3,
-                          -1.8,
-                          -3.1,
-                          -2.8
-                          )
 CBA.Nom.year          <-c(4618.28796359993,
                           4742.50216019128,
                           4817.75420489927,
@@ -371,39 +339,11 @@ CBS.Nom.year          <-ts(CBS.Nom.year,
                            start = 2013
                            )
 
-CFT.gewone.diensten   <-ts(CFT.gewone.diensten,
-                           frequency = 1,
-                           start = 2013
-                           )
-
-CFT.kapitaaldiensten  <-ts(CFT.kapitaaldiensten,
-                           frequency = 1,
-                           start = 2013
-                           )
-
-CFT.Nominal           <-ts(CFT.Nominal,
-                           frequency = 1,
-                           start = 2013
-                           )
-
-LAFT                  <-ts(LAFT, 
-                           frequency = 1,
-                           start=2013
-                           )
-
-CFT.deficit.feitelijk <-ts(CFT.deficit.feitelijk, 
-                           frequency = 1,
-                           start=2013
-                           )
 
 CBA.Nom.year          <-ts(CBA.Nom.year, 
                            frequency = 1,
                            start=2013
                            )
-
-CFT.deficit           <-CFT.gewone.diensten - CFT.kapitaaldiensten
-CFT.deficit.GDP       <- round(CFT.deficit / CFT.Nominal *100, 
-                               digits = 1)
 ```
 Converting times series to nice graphs
 ```{r}
@@ -417,12 +357,20 @@ dygraph(Nominal.level,
             gridLineColor = "lightblue") 
 ```
 
-Creating the sequence calculation for deflators 
+Creating the sequence calculation for deflators.
+First step is to perform the calculation on variables pertaining to the "Own" deflator category. Here we merge the files for Nominal_Q and Real_Q in a single dataframe. 
+
+
 ```{r}
-stavaza  <-  read.csv("stavazaR.csv", stringsAsFactors = FALSE)
 
-#Sum by 2 criterias.
+Own$'D.2013-1'[which(Own$Deflator.2 == "Own")] <- Own$'2013-1'/Own$'2013-11'*100
 
-def_nom <- group_by(Nominal_Q, TAB.CAT) %>%
-  
+
+# If Own$Deflator.2 =="Group" <- Group by TAB.CAT. Sum nominal, sum real. Nominal by Real * 100
+
+
+# If Own$Deflator.2 =="All" <- sum all nominal / sum all real *100
+
+
+# Deflator = Nominal/Real* 100  
 ```
