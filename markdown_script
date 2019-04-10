@@ -1,28 +1,28 @@
 ---
 title: "Quarterly output manipulation National Accounts"
 author: "Rendell E . de Kort"
-date: "March 28, 2019"
+date: "May 1, 2019"
 output: word_document
 ---
 
-```{r, eval = FALSE, warning = FALSE, error = FALSE}
-data1    <-  read.csv("Q_DENTON.csv", stringsAsFactors = FALSE)
-data1$Value<-as.numeric(data1$Value)
-data2    <-  read.csv("Q_NO_DENTON.csv", stringsAsFactors = FALSE)
-stavaza  <-  read.csv("stavazaR.csv", stringsAsFactors = FALSE)
-```
-
-
 ## About this file
-
-This is an explanatory note for the steps to convert quarterly output information obtained through the "Herbynization", "quarterly estimation" and "quarterly exceptions" file.
-
 This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
 
-## Reading in the data
-Data should be in "Comma Seperated Values" (csv.) format to be loaded in and saved in the folder that is consistent with the Working Directory of th R session.
+This is an explanatory note for the steps to convert quarterly output information obtained through the "Herbynization", "quarterly estimation" and "Stavaza" files.
 
-Load the required packages and transform the data into a tbl_df format. Data is then merged in a single table.
+## Reading in the data
+First we load the 3 required data files. Here it is important to note that all the files are properly saved with the same name as mentioned below and as "Comma Separated Values (.csv)" rather than in excel format.
+
+Before loading the files, also make sure that the working directory refers to the correct folder for the R session to pull files from. This can e adjusted in the menu Session -> Set Working Directory -> Choose Directory
+```{r, eval = FALSE, warning = FALSE, error = FALSE}
+data1        <-  read.csv("Q_DENTON.csv", stringsAsFactors = FALSE)
+data2        <-  read.csv("Q_NO_DENTON.csv", stringsAsFactors = FALSE)
+stavaza      <-  read.csv("stavazaR.csv", stringsAsFactors = FALSE)
+data1$Value  <-as.numeric(data1$Value)
+```
+
+## Loading the required packages 
+In case you are doing this for the first time or the packages are not available in your library, install the required packages with the example code: install.packages("dplyr"). 
 ```{r, warning = FALSE, error = FALSE, message=FALSE}
 library(dplyr)
 library(tidyr)
@@ -34,7 +34,7 @@ library(ggplot2)
 library(formattable)
 ```
 
-Combining data sets to a single dataframe
+Combining data sets to a single dataframe (tbl_df format)
 ```{r, results='hide', warning = FALSE, error = FALSE, message=FALSE}
 data1                  <- tbl_df(data1)
 data2                  <- tbl_df(data2)
@@ -46,17 +46,17 @@ dplyr::arrange(databind,STATID)
 
 Filtering data to contain the variables that we are interested in seperatly
 ```{r}
-Nominal_Q              <- filter(databind,databind$Description=="Nominal VA")
-Nominal_Q$Description  <- NULL
+Nominal_Q                <- filter(databind,databind$Description=="Nominal VA")
+Nominal_Q$Description    <- NULL
 
-Real_Q                 <- filter(databind,databind$Description=="Real VA")
-Real_Q$Description     <- NULL
+Real_Q                   <- filter(databind,databind$Description=="Real VA")
+Real_Q$Description       <- NULL
 
-Nominal_Y              <- filter(databind,databind$Description=="B nominal")
-Nominal_Y$Description  <- NULL
+Nominal_Y                <- filter(databind,databind$Description=="B nominal")
+Nominal_Y$Description    <- NULL
 
-Real_Y                 <- filter(databind,databind$Description=="B Real")
-Real_Y$Description     <- NULL
+Real_Y                   <- filter(databind,databind$Description=="B Real")
+Real_Y$Description       <- NULL
 
 Deflator_Y               <- filter(databind,databind$Description=="Deflator")
 Deflator_Y$Description   <- NULL
@@ -67,10 +67,10 @@ rm(databind)
 Long to wide format
 ```{r}
 Deflator_Y   <-spread(Deflator_Y,Period,Value)
-Nominal_Q  <-spread(Nominal_Q,Period,Value)
-Nominal_Y  <-spread(Nominal_Y,Period,Value)
-Real_Q     <-spread(Real_Q,Period,Value)
-Real_Y     <-spread(Real_Y,Period,Value)
+Nominal_Q    <-spread(Nominal_Q,Period,Value)
+Nominal_Y    <-spread(Nominal_Y,Period,Value)
+Real_Q       <-spread(Real_Q,Period,Value)
+Real_Y       <-spread(Real_Y,Period,Value)
 ```
 
 Creating a check to verify whether the year figures are consistent with Stavaza
@@ -266,7 +266,6 @@ Test.equality$q.check <- Nominal_Q$`2013-1`+Nominal_Q$`2013-2`+Nominal_Q$`2013-3
 Test.equality$Check2    <-Test.equality$`2013`==Test.equality$q.check
 ````
 
-
 Create output in csv. Works. However, would like to have all the tabs combined.
 ```{r}
 write.csv(Deflator, 
@@ -339,7 +338,6 @@ CBS.Nom.year          <-ts(CBS.Nom.year,
                            start = 2013
                            )
 
-
 CBA.Nom.year          <-ts(CBA.Nom.year, 
                            frequency = 1,
                            start=2013
@@ -362,21 +360,47 @@ First step is to perform the calculation on variables pertaining to the "Own" de
 
 
 ```{r}
-Vector_Own <- if_else(Nominal_Q$Deflator.2=="Own",1,0)
+Vector_Own   <- if_else(Nominal_Q$Deflator.2=="Own",1,0)
 Vector_Group <- if_else(Nominal_Q$Deflator.2=="Group",1,0)
+Vector_All   <- if_else(Nominal_Q$Deflator.2=="All",1,0)
+
+# First round: Own deflators
+Own_Nom_Q      <-(select(Nominal_Q,-c(STATID,
+                                      TAB.CAT,
+                                      Deflator.1,
+                                      Deflator.2,
+                                      TAB.CAT_DESCRIPTION,
+                                      ISIC_DESCRIPTION))
+                  * Vector_Own
+                  )
+
+Own_Real_Q     <-(select(Real_Q,-c(STATID,
+                                   TAB.CAT,
+                                   Deflator.1,
+                                   Deflator.2,
+                                   TAB.CAT_DESCRIPTION,
+                                   ISIC_DESCRIPTION))
+                  * Vector_Own
+                  )
+
+Own_Deflator_Q <- Own_Nom_Q / Own_Real_Q *100
+
+# Second round: Group deflators
+Group_Nom_Q  <- bind_cols(Own_Nom_Q, Nominal_Q)
 
 
-Own <-(select(Nominal_Q,-c(STATID,TAB.CAT,Deflator.1,Deflator.2,TAB.CAT_DESCRIPTION,ISIC_DESCRIPTION))/ 
-                select(Real_Q,-c(STATID,TAB.CAT,Deflator.1,Deflator.2,TAB.CAT_DESCRIPTION,ISIC_DESCRIPTION))*
-         Vector_Own)
-                
-Own <-add_column(Own,Deflator.2=Nominal_Q$Deflator.2) 
+Group_Real_Q <-bind_cols(Own_Real_Q, Real_Q)
+             
+ 
 
+            
+             
+### scrap
 # Group 
+Group_Nom_Q <- (select(Nominal_Q,-c(STATID,TAB.CAT,Deflator.1,Deflator.2,TAB.CAT_DESCRIPTION,ISIC_DESCRIPTION)) 
 
-Group_Nom_Q <- Nominal_Q %>%
+Group_Nom_Q <- group_by(Nominal_Q, TAB.CAT) %>%
   select(-c(STATID,Deflator.1,Deflator.2,TAB.CAT_DESCRIPTION,ISIC_DESCRIPTION))%>%
-  group_by(TAB.CAT) %>%
   summarise(TAB.CAT=first(TAB.CAT),
             N.2013.1=sum(`2013-1`),
             N.2013.2=sum(`2013-2`),
@@ -401,7 +425,29 @@ Group_Nom_Q <- Nominal_Q %>%
             )
  
 
-
+PUB_Nominal_Q <- group_by(Nominal_Q, TAB.CAT) %>%
+  summarise(TAB.CAT_DESCRIPTION=first(TAB.CAT_DESCRIPTION),
+    Q.2013.1=sum(`2013-1`),
+    Q.2013.2=sum(`2013-2`),
+    Q.2013.3=sum(`2013-3`),
+    Q.2013.4=sum(`2013-4`),
+    Q.2014.1=sum(`2014-1`),
+    Q.2014.2=sum(`2014-2`),
+    Q.2014.3=sum(`2014-3`),
+    Q.2014.4=sum(`2014-4`),
+    Q.2015.1=sum(`2015-1`),
+    Q.2015.2=sum(`2015-2`),
+    Q.2015.3=sum(`2015-3`),
+    Q.2015.4=sum(`2015-4`),
+    Q.2016.1=sum(`2016-1`),
+    Q.2016.2=sum(`2016-2`),
+    Q.2016.3=sum(`2016-3`),
+    Q.2016.4=sum(`2016-4`),
+    Q.2017.1=sum(`2017-1`),
+    Q.2017.2=sum(`2017-2`),
+    Q.2017.3=sum(`2017-3`),
+    Q.2017.4=sum(`2017-4`)
+  )
 
 
 
