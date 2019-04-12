@@ -13,7 +13,11 @@ This is an explanatory note for the steps to convert quarterly output informatio
 ## Reading in the data
 First we load the 3 required data files. Here it is important to note that all the files are properly saved with the same name as mentioned below and as "Comma Separated Values (.csv)" rather than in excel format.
 
-Before loading the files, also make sure that the working directory refers to the correct folder for the R session to pull files from. This can e adjusted in the menu Session -> Set Working Directory -> Choose Directory
+Before loading the files, also make sure that the working directory refers to the correct folder for the R session to pull files from. This can e adjusted in the menu Session -> Set Working Directory -> Choose Directory. This is done automatically with the code following below. Though it needs to be adjusted for the environment at the CBS.
+```{r, eval = FALSE, warning = FALSE, error = FALSE}
+setwd("~/CBS NA/R/20190328")
+```
+
 ```{r, eval = FALSE, warning = FALSE, error = FALSE}
 data1        <-  read.csv("Q_DENTON.csv", stringsAsFactors = FALSE)
 data2        <-  read.csv("Q_NO_DENTON.csv", stringsAsFactors = FALSE)
@@ -32,6 +36,7 @@ library(treemap)
 library(treemapify)
 library(ggplot2)
 library(formattable)
+detach(package:plyr)
 ```
 
 Combining data sets to a single dataframe (tbl_df format)
@@ -174,16 +179,22 @@ Real_Y<- select(Real_Y,c(STATID,
                                         ))
 dplyr::arrange(Real_Y,TAB.CAT)
 
+#Cleanup Stavaza
+stavaza <-select(stavaza,
+                 'Werk.ISIC',
+                 'TAB.CAT',
+                 'TAB.CAT_DESCRIPTION',
+                 'Deflator.2'
+                 )
+
 # Nominal_Q
-Nominal_Q<- left_join(Nominal_Q,stavaza,
-                   by=c("STATID"="Werk.ISIC"))
-Nominal_Q          <- Nominal_Q[,c(1,26,36,37,27,28,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21)]
+Nominal_Q<- left_join(stavaza,Nominal_Q,
+                   by=c("Werk.ISIC"="STATID"))
 dplyr::arrange(Nominal_Q,TAB.CAT)
 
 # Real_Q
-Real_Q<- left_join(Real_Q,stavaza,
-                   by=c("STATID"="Werk.ISIC"))
-Real_Q          <- Real_Q[,c(1,26,36,37,27,28,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21)]
+Real_Q<- left_join(stavaza,Real_Q,
+                   by=c("Werk.ISIC"="STATID"))
 dplyr::arrange(Real_Q,TAB.CAT)
 
 ```
@@ -191,8 +202,9 @@ dplyr::arrange(Real_Q,TAB.CAT)
 Grouping by TAB.CAT for Publication tables
 ```{r}
 # Nominal_Y
-PUB_Nominal_Y <- group_by(Nominal_Y,TAB.CAT) %>%
-  summarise(TAB.CAT_DESCRIPTION=first(TAB.CAT_DESCRIPTION),
+PUB_Nominal_Y <- select(Nominal_Y,-c(STATID,Deflator.1,Deflator.2,ISIC_DESCRIPTION,TAB.CAT_DESCRIPTION)) %>%
+  group_by(TAB.CAT) %>%
+  summarise(
     Y.2013=sum(Y_2013),
     Y.2014=sum(Y_2014),
     Y.2015=sum(Y_2015),
@@ -201,8 +213,9 @@ PUB_Nominal_Y <- group_by(Nominal_Y,TAB.CAT) %>%
   )
 
 # Real_Y
-PUB_Real_Y <- group_by(Real_Y,TAB.CAT) %>%
-  summarise(TAB.CAT_DESCRIPTION=first(TAB.CAT_DESCRIPTION),
+PUB_Real_Y <- select(Real_Y,-c(STATID,Deflator.1,Deflator.2,ISIC_DESCRIPTION,TAB.CAT_DESCRIPTION)) %>%
+  group_by(TAB.CAT) %>%
+  summarise(
     Y.2013=sum(Y_2013),
     Y.2014=sum(Y_2014),
     Y.2015=sum(Y_2015),
@@ -365,44 +378,32 @@ Vector_Group <- if_else(Nominal_Q$Deflator.2=="Group",1,0)
 Vector_All   <- if_else(Nominal_Q$Deflator.2=="All",1,0)
 
 # First round: Own deflators
-Own_Nom_Q      <-(select(Nominal_Q,-c(STATID,
+Own_Nom_Q      <-(select(Nominal_Q,-c(Werk.ISIC,
                                       TAB.CAT,
-                                      Deflator.1,
-                                      Deflator.2,
                                       TAB.CAT_DESCRIPTION,
-                                      ISIC_DESCRIPTION))
+                                      Deflator.2)
+                         )
                   * Vector_Own
                   )
 
-Own_Real_Q     <-(select(Real_Q,-c(STATID,
-                                   TAB.CAT,
-                                   Deflator.1,
-                                   Deflator.2,
-                                   TAB.CAT_DESCRIPTION,
-                                   ISIC_DESCRIPTION))
+Own_Real_Q     <-(select(Real_Q,-c(Werk.ISIC,
+                                      TAB.CAT,
+                                      TAB.CAT_DESCRIPTION,
+                                      Deflator.2)
+)
                   * Vector_Own
                   )
 
 Own_Deflator_Q <- Own_Nom_Q / Own_Real_Q *100
+```
 
+
+```{r}
 # Second round: Group deflators
-Group_Nom_Q  <- bind_cols(Own_Nom_Q, Nominal_Q)
-
-
-Group_Real_Q <-bind_cols(Own_Real_Q, Real_Q)
+Group_Nom_Q  <- bind_cols(Own_Nom_Q, select(Nominal_Q, TAB.CAT))
              
- 
-
-            
-             
-### scrap
-# Group 
-Group_Nom_Q <- (select(Nominal_Q,-c(STATID,TAB.CAT,Deflator.1,Deflator.2,TAB.CAT_DESCRIPTION,ISIC_DESCRIPTION)) 
-
-Group_Nom_Q <- group_by(Nominal_Q, TAB.CAT) %>%
-  select(-c(STATID,Deflator.1,Deflator.2,TAB.CAT_DESCRIPTION,ISIC_DESCRIPTION))%>%
-  summarise(TAB.CAT=first(TAB.CAT),
-            N.2013.1=sum(`2013-1`),
+Group_Nom_Q <- group_by(Group_Nom_Q, TAB.CAT) %>%
+  summarise(N.2013.1=sum(`2013-1`),
             N.2013.2=sum(`2013-2`),
             N.2013.3=sum(`2013-3`),
             N.2013.4=sum(`2013-4`),
@@ -424,42 +425,34 @@ Group_Nom_Q <- group_by(Nominal_Q, TAB.CAT) %>%
             N.2017.4=sum(`2017-4`)
             )
  
+Group_Real_Q  <- bind_cols(Own_Real_Q, select(Real_Q, TAB.CAT))
+             
+Group_Real_Q <- group_by(Group_Real_Q, TAB.CAT) %>%
+  summarise(N.2013.1=sum(`2013-1`),
+            N.2013.2=sum(`2013-2`),
+            N.2013.3=sum(`2013-3`),
+            N.2013.4=sum(`2013-4`),
+            N.2014.1=sum(`2014-1`),
+            N.2014.2=sum(`2014-2`),
+            N.2014.3=sum(`2014-3`),
+            N.2014.4=sum(`2014-4`),
+            N.2015.1=sum(`2015-1`),
+            N.2015.2=sum(`2015-2`),
+            N.2015.3=sum(`2015-3`),
+            N.2015.4=sum(`2015-4`),
+            N.2016.1=sum(`2016-1`),
+            N.2016.2=sum(`2016-2`),
+            N.2016.3=sum(`2016-3`),
+            N.2016.4=sum(`2016-4`),
+            N.2017.1=sum(`2017-1`),
+            N.2017.2=sum(`2017-2`),
+            N.2017.3=sum(`2017-3`),
+            N.2017.4=sum(`2017-4`)
+            )
 
-PUB_Nominal_Q <- group_by(Nominal_Q, TAB.CAT) %>%
-  summarise(TAB.CAT_DESCRIPTION=first(TAB.CAT_DESCRIPTION),
-    Q.2013.1=sum(`2013-1`),
-    Q.2013.2=sum(`2013-2`),
-    Q.2013.3=sum(`2013-3`),
-    Q.2013.4=sum(`2013-4`),
-    Q.2014.1=sum(`2014-1`),
-    Q.2014.2=sum(`2014-2`),
-    Q.2014.3=sum(`2014-3`),
-    Q.2014.4=sum(`2014-4`),
-    Q.2015.1=sum(`2015-1`),
-    Q.2015.2=sum(`2015-2`),
-    Q.2015.3=sum(`2015-3`),
-    Q.2015.4=sum(`2015-4`),
-    Q.2016.1=sum(`2016-1`),
-    Q.2016.2=sum(`2016-2`),
-    Q.2016.3=sum(`2016-3`),
-    Q.2016.4=sum(`2016-4`),
-    Q.2017.1=sum(`2017-1`),
-    Q.2017.2=sum(`2017-2`),
-    Q.2017.3=sum(`2017-3`),
-    Q.2017.4=sum(`2017-4`)
-  )
+Group_Deflator_Q <- select(Group_Nom_Q, -c(TAB.CAT)) / select(Group_Real_Q,-c(TAB.CAT)) *100
 
-
-
-
-Own$'D.2013-1'[which(Own$Deflator.2 == "Own")] <- Own$'2013-1'/Own$'2013-11'*100
-
-
-# If Own$Deflator.2 =="Group" <- Group by TAB.CAT. Sum nominal, sum real. Nominal by Real * 100
+Group_Deflator_Q <- bind_cols(select(Group_Nom_Q, TAB.CAT),Group_Deflator_Q)
 
 
-# If Own$Deflator.2 =="All" <- sum all nominal / sum all real *100
-
-
-# Deflator = Nominal/Real* 100  
 ```
