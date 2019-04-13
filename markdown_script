@@ -69,7 +69,7 @@ Deflator_Y$Description   <- NULL
 rm(databind)
 ```
 
-Long to wide format
+Long to wide format. We change the orientation of the data to facilitate further manipulation.
 ```{r}
 Deflator_Y   <-spread(Deflator_Y,Period,Value)
 Nominal_Q    <-spread(Nominal_Q,Period,Value)
@@ -286,28 +286,6 @@ Test.equality$q.check <- Nominal_Q$`2013-1`+Nominal_Q$`2013-2`+Nominal_Q$`2013-3
 Test.equality$Check2    <-Test.equality$`2013`==Test.equality$q.check
 ````
 
-Create output in csv. Works. However, would like to have all the tabs combined.
-```{r}
-write.csv(Deflator, 
-          file =         "Output_Deflator.csv")
-write.csv(Nominal_Q, 
-          file =         "Output_Nominal_Q.csv")
-write.csv(Real_Q, 
-          file =         "Output_Real_Q.csv")
-write.csv(Nominal_Y, 
-          file =         "Output_Nominal_Y.csv")
-write.csv(Real_Y, 
-          file =         "Output_Real_Y.csv")
-write.csv(Test.equality, 
-          file =         "Output_Summary.csv")
-```
-
-```{r}
-write.csv(PUB_Nominal_Y.L,
-          file =  "PUB_Nom_Y_L.csv")
-write.csv(PUB_Nominal_Q,
-          file =  "PUB_Nom_Q.csv")
-```
 Creating aditional variables
 ```{r}
 CBS.Nom.year          <-c(4836.2,
@@ -350,8 +328,6 @@ dygraph(Nominal.level,
 
 Creating the sequence calculation for deflators.
 First step is to perform the calculation on variables pertaining to the "Own" deflator category. Here we merge the files for Nominal_Q and Real_Q in a single dataframe. 
-
-
 ```{r}
 Vector_Own   <- if_else(Nominal_Q$Deflator.2=="Own",1,0)
 Vector_Group <- if_else(Nominal_Q$Deflator.2=="Group",1,0)
