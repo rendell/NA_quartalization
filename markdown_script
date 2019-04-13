@@ -27,7 +27,7 @@ data1$Value  <-  as.numeric(data1$Value)
 
 ## Loading the required packages 
 In case you are doing this for the first time or the packages are not available in your library, install the required packages with the example code: install.packages("dplyr"). Note that the last line actually detaches the package "plyr". This is needed because it interferes with the "group_by" function from the dplyr package which we will be using later on. 
-```{r, warning = FALSE, error = FALSE, message=FALSE}
+```{r, eval=FALSE, warning = FALSE, error = FALSE, message=FALSE}
 library(dplyr)
 library(tidyr)
 library(formattable)
@@ -108,82 +108,54 @@ dplyr::arrange(Test.equality,Werk.ISIC)
 rm(stavaza_temp)
 ```
 
-Changing the variable names for consistency: 
+Changing the variable names for consistency. 
+*Note: Year variables need to be expanded*
 ```{r}
-Deflator_Y  <- setNames(Deflator_Y,  c("STATID",
+years <- c("STATID",
                                    "Y_2013",
                                    "Y_2014",
                                    "Y_2015",
                                    "Y_2016",
                                    "Y_2017"
-                                   ))
-Nominal_Y <- setNames(Nominal_Y, c("STATID",
-                                   "Y_2013",
-                                   "Y_2014",
-                                   "Y_2015",
-                                   "Y_2016",
-                                   "Y_2017"
-                                   ))
-Real_Y    <- setNames(Real_Y,    c("STATID",
-                                   "Y_2013",
-                                   "Y_2014",
-                                   "Y_2015",
-                                   "Y_2016",
-                                   "Y_2017"
-                                   ))
+                                   )
+Deflator_Y  <- setNames(Deflator_Y,  years)
+Nominal_Y <- setNames(Nominal_Y, years)
+Real_Y    <- setNames(Real_Y,    years)
+rm(years)
 ```
 
-The left_join function merges two data sets and after that we select and arrange the variables 
+The left_join function merges two data sets and after that we select and arrange the variables.
+*Note: Year variables need to be expanded*
 ```{r, results = 'hide'}
 # Deflator
+variables <- c("STATID",
+               "TAB.CAT",
+               "Deflator.1",
+               "Deflator.2",
+               "TAB.CAT_DESCRIPTION",
+               "ISIC_DESCRIPTION",
+               "Y_2013",
+               "Y_2014",
+               "Y_2015",
+               "Y_2016",
+               "Y_2017"
+                                       )
+
 Deflator_Y<- left_join(Deflator_Y,stavaza,
                    by=c("STATID"="Werk.ISIC"))
-Deflator_Y<- select(Deflator_Y,c(STATID,
-                             TAB.CAT,
-                             Deflator.1,
-                             Deflator.2,
-                             TAB.CAT_DESCRIPTION,
-                             ISIC_DESCRIPTION,
-                                       Y_2013,
-                                       Y_2014,
-                                       Y_2015,
-                                       Y_2016,
-                                       Y_2017
-                                       ))
+Deflator_Y<- select(Deflator_Y,variables)
 dplyr::arrange(Deflator_Y,TAB.CAT)
 
 # Nominal_Y
 Nominal_Y<- left_join(Nominal_Y,stavaza,
                    by=c("STATID"="Werk.ISIC"))
-Nominal_Y<- select(Nominal_Y,c(STATID,
-                               TAB.CAT,
-                               Deflator.1,
-                               Deflator.2,
-                               TAB.CAT_DESCRIPTION,
-                               ISIC_DESCRIPTION,
-                                       Y_2013,
-                                       Y_2014,
-                                       Y_2015,
-                                       Y_2016,
-                                       Y_2017
-                                       ))
+Nominal_Y<- select(Nominal_Y,variables)
 dplyr::arrange(Nominal_Y,TAB.CAT)
 
 # Real_Y
 Real_Y<- left_join(Real_Y,stavaza,
                    by=c("STATID"="Werk.ISIC"))
-Real_Y<- select(Real_Y,c(STATID,
-                         TAB.CAT,
-                               Deflator.1,
-                               Deflator.2,
-                               TAB.CAT_DESCRIPTION,
-                               ISIC_DESCRIPTION,
-                                       Y_2013,
-                                       Y_2014,
-                                       Y_2015,
-                                       Y_2016,
-                                       Y_2017
-                                        ))
+Real_Y<- select(Real_Y,variables)
 dplyr::arrange(Real_Y,TAB.CAT)
 
 #Cleanup Stavaza
@@ -204,9 +176,12 @@ Real_Q<- left_join(stavaza,Real_Q,
                    by=c("Werk.ISIC"="STATID"))
 dplyr::arrange(Real_Q,TAB.CAT)
 
+rm(variables)
+
 ```
 
-Grouping by TAB.CAT for Publication tables
+Grouping by TAB.CAT for Publication tables.
+*Note: Year variables need to be expanded*
 ```{r}
 # Nominal_Y
 PUB_Nominal_Y <- select(Nominal_Y,-c(STATID,Deflator.1,Deflator.2,ISIC_DESCRIPTION,TAB.CAT_DESCRIPTION)) %>%
@@ -257,6 +232,7 @@ PUB_Nominal_Q <- group_by(Nominal_Q,TAB.CAT) %>%
 ```
 
 Creating growth variables
+*Note: Year variables need to be expanded*
 ```{r}
 PUB_Nominal_Y$g.2014  <- (PUB_Nominal_Y$Y.2014/PUB_Nominal_Y$Y.2013-1)*100
 PUB_Nominal_Y$g.2015  <- (PUB_Nominal_Y$Y.2015/PUB_Nominal_Y$Y.2014-1)*100
@@ -281,12 +257,11 @@ ggplot2::ggplot(PUB_Nominal_Y, ggplot2::aes(area = Y.2017,
 
 One more consistency check, checking the sum of the quarterly nominal GDP whether it adds up to the right amount for 2013.
 ```{r}
-Test.equality <- Test.equality[-57, ]
 Test.equality$q.check <- Nominal_Q$`2013-1`+Nominal_Q$`2013-2`+Nominal_Q$`2013-3`+Nominal_Q$`2013-4`
 Test.equality$Check2    <-Test.equality$`2013`==Test.equality$q.check
-````
+```
 
-Creating aditional variables
+For comparison purposes with the Central Bank estimates. This piece of code needs to flow from the results of this file rater than inputed as values.
 ```{r}
 CBS.Nom.year          <-c(4836.2,
                           4949.8,
@@ -302,7 +277,7 @@ CBA.Nom.year          <-c(4618.28796359993,
                           4793.04253070106
                           )
 ```
-Converting to time seris format
+Converting to time series format and to graphs afterwards.
 ```{r}
 CBS.Nom.year          <-ts(CBS.Nom.year,
                            frequency = 1,
@@ -313,9 +288,8 @@ CBA.Nom.year          <-ts(CBA.Nom.year,
                            frequency = 1,
                            start=2013
                            )
-```
-Converting times series to nice graphs
-```{r}
+
+#Converting times series to nice graphs
 Nominal.level <-cbind(CBS.Nom.year,CBA.Nom.year)
 dygraph(Nominal.level,
         main="Nominal GDP (in Afl.)",
@@ -326,34 +300,34 @@ dygraph(Nominal.level,
             gridLineColor = "lightblue") 
 ```
 
-Creating the sequence calculation for deflators.
-First step is to perform the calculation on variables pertaining to the "Own" deflator category. Here we merge the files for Nominal_Q and Real_Q in a single dataframe. 
+# Creating the sequence calculation for deflators.
+First step is to perform the calculation on variables pertaining to the "Own" deflator category. 
+To do this we are creating vectors which we can use to multiply the dataframes with.
 ```{r}
 Vector_Own   <- if_else(Nominal_Q$Deflator.2=="Own",1,0)
 Vector_Group <- if_else(Nominal_Q$Deflator.2=="Group",1,0)
 Vector_All   <- if_else(Nominal_Q$Deflator.2=="All",1,0)
 
 # First round: Own deflators
-Own_Nom_Q      <-(select(Nominal_Q,-c(Werk.ISIC,
-                                      TAB.CAT,
-                                      TAB.CAT_DESCRIPTION,
-                                      Deflator.2)
-                         )
+redundant <-c("Werk.ISIC",
+              "TAB.CAT",
+              "TAB.CAT_DESCRIPTION",
+              "Deflator.2")
+
+Own_Nom_Q      <-(select(Nominal_Q,-redundant)
                   * Vector_Own
                   )
 
-Own_Real_Q     <-(select(Real_Q,-c(Werk.ISIC,
-                                      TAB.CAT,
-                                      TAB.CAT_DESCRIPTION,
-                                      Deflator.2)
-)
+Own_Real_Q     <-(select(Real_Q,-redundant)
                   * Vector_Own
                   )
+rm(redundant)
 
 Own_Deflator_Q <- Own_Nom_Q / Own_Real_Q *100
 ```
 
 # Second round: Group deflators
+*Note: Year variables need to be expanded*
 ```{r}
 Group_Nom_Q  <- bind_cols(Own_Nom_Q, select(Nominal_Q, TAB.CAT))
              
@@ -409,9 +383,6 @@ Group_Deflator_Q <- select(Group_Nom_Q, -c(TAB.CAT)) / select(Group_Real_Q,-c(TA
 
 Group_Deflator_Q <- bind_cols(select(Group_Nom_Q, TAB.CAT),Group_Deflator_Q)
 
-Group_Deflator_Q <- data.frame(name = rep(df$name, df$count),
-                       group = rep(df$group, df$count))
-
 expand_round_2 <- c(1,9,1,3,3,16,11,3,5,8,5,5,9,4,3,4,4,5,1,1)
 Group_Nom_Q <- uncount(Group_Nom_Q, expand_round_2)
 Group_Nom_Q <- select(Group_Nom_Q,-c(TAB.CAT)) * Vector_Group
@@ -448,6 +419,7 @@ Final_Deflator_Q <- (select(Nominal_Q, -c(Werk.ISIC,TAB.CAT,TAB.CAT_DESCRIPTION,
 ```
 
 Grouping by TAB.CAT for Publication tables
+*Note: Year variables need to be expanded*
 ```{r}
 # Nominal_Y
 PUB_Nominal_Y <- select(Nominal_Y,-c(STATID,Deflator.1,Deflator.2,ISIC_DESCRIPTION,TAB.CAT_DESCRIPTION)) %>%
