@@ -387,6 +387,13 @@ Real_Q <- select(Nominal_Q,-c(Werk.ISIC,TAB.CAT,TAB.CAT_DESCRIPTION,Deflator.2))
 Real_Q[is.nan(Real_Q)] <- 0
 ```
 
+### Group to year
+Would also be good to at this stage compare the Nominal year number with the same aggregation produced here.
+```{r}
+Nominal  <- 
+```
+
+
 Grouping by TAB.CAT for Publication tables
 *Note: Year variables need to be expanded*
 ```{r}
