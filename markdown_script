@@ -249,7 +249,7 @@ Create Treemap
 ```{r}
 ggplot2::ggplot(PUB_Nominal_Y, ggplot2::aes(area = Y.2017, 
                                             fill = g.2017,
-                                            label=TAB.CAT_DESCRIPTION)) + 
+                                            label=TAB.CAT)) + 
                                         geom_treemap()+
                                         ggtitle("Nominal GDP 2017")+
                                         geom_treemap_text()
@@ -321,13 +321,17 @@ Own_Nom_Q      <-(select(Nominal_Q,-redundant)
 Own_Real_Q     <-(select(Real_Q,-redundant)
                   * Vector_Own
                   )
-rm(redundant)
 
 Own_Deflator_Q <- Own_Nom_Q / Own_Real_Q *100
+
+# Little function to enable us to remove the "Nan" to "0"
+is.nan.data.frame <- function(x)
+do.call(cbind, lapply(x, is.nan))
+
+Own_Deflator_Q[is.nan(Own_Deflator_Q)] <- 0
 ```
 
-# Second round: Group deflators
-*Note: Year variables need to be expanded*
+# Second round: Group 
 ```{r}
 Group_Nom_Q  <- bind_cols(Own_Nom_Q, select(Nominal_Q, TAB.CAT))
              
@@ -380,15 +384,21 @@ Group_Real_Q <- group_by(Group_Real_Q, TAB.CAT) %>%
             )
 
 Group_Deflator_Q <- select(Group_Nom_Q, -c(TAB.CAT)) / select(Group_Real_Q,-c(TAB.CAT)) *100
+Group_Deflator_Q[is.nan(Group_Deflator_Q)] <- 0
 
 Group_Deflator_Q <- bind_cols(select(Group_Nom_Q, TAB.CAT),Group_Deflator_Q)
 
+# expanding the group deflators to voer all ISICs.
 expand_round_2 <- c(1,9,1,3,3,16,11,3,5,8,5,5,9,4,3,4,4,5,1,1)
-Group_Nom_Q <- uncount(Group_Nom_Q, expand_round_2)
-Group_Nom_Q <- select(Group_Nom_Q,-c(TAB.CAT)) * Vector_Group
 
-Group_Real_Q <- uncount(Group_Real_Q, expand_round_2)
-Group_Real_Q <- select(Group_Real_Q,-c(TAB.CAT)) * Vector_Group
+Group_Deflator_Q <- uncount(Group_Deflator_Q, expand_round_2)
+Group_Deflator_Q <- select(Group_Deflator_Q,-c(TAB.CAT)) * Vector_Group
+
+Group_Nom_Q      <-(select(Nominal_Q,-redundant)
+                  * Vector_Group
+                  )
+Group_Real_Q <- Group_Nom_Q / Group_Deflator_Q / 100
+Group_Real_Q[is.nan(Group_Real_Q)] <- 0
 ```
 
 # Third round: create deflator for all
@@ -405,17 +415,15 @@ All_Real_Q  <- All_Real_Q %>%
 All_Deflator_Q <- All_Nom_Q / All_Real_Q *100
 
 expand_round_3 <- 101
-All_Nom_Q <- uncount(All_Nom_Q, expand_round_3)
-All_Nom_Q <- All_Nom_Q * Vector_All
-
-All_Real_Q <- uncount(All_Real_Q, expand_round_3)
-All_Real_Q <- All_Real_Q * Vector_All
+All_Deflator_Q <- uncount(All_Deflator_Q, expand_round_3)
+All_Deflator_Q <- All_Deflator_Q * Vector_All
 ```
 
 # Fourth round: complete final table
 ```{r}
-Final_Real_Q <- Own_Real_Q + Group_Real_Q + All_Real_Q
-Final_Deflator_Q <- (select(Nominal_Q, -c(Werk.ISIC,TAB.CAT,TAB.CAT_DESCRIPTION,Deflator.2))) / Final_Real_Q *100
+Deflator_Q <- Own_Deflator_Q+ Group_Deflator_Q+All_Deflator_Q
+Real_Q <- select(Nominal_Q,-c(Werk.ISIC,TAB.CAT,TAB.CAT_DESCRIPTION,Deflator.2)) / Deflator_Q / 100
+Real_Q[is.nan(Real_Q)] <- 0
 ```
 
 Grouping by TAB.CAT for Publication tables
@@ -444,6 +452,7 @@ PUB_Real_Y <- select(Real_Y,-c(STATID,Deflator.1,Deflator.2,ISIC_DESCRIPTION,TAB
   )
 
 # Nominal_Q
+
 PUB_Nominal_Q <- group_by(Nominal_Q,TAB.CAT) %>%
   summarise(TAB.CAT_DESCRIPTION=first(TAB.CAT_DESCRIPTION),
     Q.2013.1=sum(`2013-1`),
