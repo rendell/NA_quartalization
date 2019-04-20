@@ -1,7 +1,7 @@
 ---
 title: "Quarterly output manipulation National Accounts"
 author: "Rendell E . de Kort"
-date: "May 1, 2019"
+date: "May 25, 2019"
 output: word_document
 ---
 
@@ -60,22 +60,14 @@ Real_Q$Description       <- NULL
 Nominal_Y                <- filter(databind,databind$Description=="B nominal")
 Nominal_Y$Description    <- NULL
 
-Real_Y                   <- filter(databind,databind$Description=="B Real")
-Real_Y$Description       <- NULL
-
-Deflator_Y               <- filter(databind,databind$Description=="Deflator")
-Deflator_Y$Description   <- NULL
-
 rm(databind)
 ```
 
 Long to wide format. We change the orientation of the data to facilitate further manipulation.
 ```{r}
-Deflator_Y   <-spread(Deflator_Y,Period,Value)
 Nominal_Q    <-spread(Nominal_Q,Period,Value)
 Nominal_Y    <-spread(Nominal_Y,Period,Value)
 Real_Q       <-spread(Real_Q,Period,Value)
-Real_Y       <-spread(Real_Y,Period,Value)
 ```
 
 Creating a check to verify whether the year figures are consistent with Stavaza
@@ -118,16 +110,13 @@ years <- c("STATID",
                                    "Y_2016",
                                    "Y_2017"
                                    )
-Deflator_Y  <- setNames(Deflator_Y,  years)
 Nominal_Y <- setNames(Nominal_Y, years)
-Real_Y    <- setNames(Real_Y,    years)
 rm(years)
 ```
 
 The left_join function merges two data sets and after that we select and arrange the variables.
 *Note: Year variables need to be expanded*
 ```{r, results = 'hide'}
-# Deflator
 variables <- c("STATID",
                "TAB.CAT",
                "Deflator.1",
@@ -141,22 +130,11 @@ variables <- c("STATID",
                "Y_2017"
                                        )
 
-Deflator_Y<- left_join(Deflator_Y,stavaza,
-                   by=c("STATID"="Werk.ISIC"))
-Deflator_Y<- select(Deflator_Y,variables)
-dplyr::arrange(Deflator_Y,TAB.CAT)
-
 # Nominal_Y
 Nominal_Y<- left_join(Nominal_Y,stavaza,
                    by=c("STATID"="Werk.ISIC"))
 Nominal_Y<- select(Nominal_Y,variables)
 dplyr::arrange(Nominal_Y,TAB.CAT)
-
-# Real_Y
-Real_Y<- left_join(Real_Y,stavaza,
-                   by=c("STATID"="Werk.ISIC"))
-Real_Y<- select(Real_Y,variables)
-dplyr::arrange(Real_Y,TAB.CAT)
 
 #Cleanup Stavaza
 stavaza <-select(stavaza,
@@ -177,7 +155,6 @@ Real_Q<- left_join(stavaza,Real_Q,
 dplyr::arrange(Real_Q,TAB.CAT)
 
 rm(variables)
-
 ```
 
 Grouping by TAB.CAT for Publication tables.
@@ -185,17 +162,6 @@ Grouping by TAB.CAT for Publication tables.
 ```{r}
 # Nominal_Y
 PUB_Nominal_Y <- select(Nominal_Y,-c(STATID,Deflator.1,Deflator.2,ISIC_DESCRIPTION,TAB.CAT_DESCRIPTION)) %>%
-  group_by(TAB.CAT) %>%
-  summarise(
-    Y.2013=sum(Y_2013),
-    Y.2014=sum(Y_2014),
-    Y.2015=sum(Y_2015),
-    Y.2016=sum(Y_2016),
-    Y.2017=sum(Y_2017)
-  )
-
-# Real_Y
-PUB_Real_Y <- select(Real_Y,-c(STATID,Deflator.1,Deflator.2,ISIC_DESCRIPTION,TAB.CAT_DESCRIPTION)) %>%
   group_by(TAB.CAT) %>%
   summarise(
     Y.2013=sum(Y_2013),
@@ -238,11 +204,6 @@ PUB_Nominal_Y$g.2014  <- (PUB_Nominal_Y$Y.2014/PUB_Nominal_Y$Y.2013-1)*100
 PUB_Nominal_Y$g.2015  <- (PUB_Nominal_Y$Y.2015/PUB_Nominal_Y$Y.2014-1)*100
 PUB_Nominal_Y$g.2016  <- (PUB_Nominal_Y$Y.2016/PUB_Nominal_Y$Y.2015-1)*100
 PUB_Nominal_Y$g.2017  <- (PUB_Nominal_Y$Y.2017/PUB_Nominal_Y$Y.2016-1)*100
-
-PUB_Real_Y$g.2014     <- (PUB_Real_Y$Y.2014/PUB_Real_Y$Y.2013-1)*100
-PUB_Real_Y$g.2015     <- (PUB_Real_Y$Y.2015/PUB_Real_Y$Y.2014-1)*100
-PUB_Real_Y$g.2016     <- (PUB_Real_Y$Y.2016/PUB_Real_Y$Y.2015-1)*100
-PUB_Real_Y$g.2017     <- (PUB_Real_Y$Y.2017/PUB_Real_Y$Y.2016-1)*100
 ```
 
 Create Treemap
@@ -431,17 +392,6 @@ Grouping by TAB.CAT for Publication tables
 ```{r}
 # Nominal_Y
 PUB_Nominal_Y <- select(Nominal_Y,-c(STATID,Deflator.1,Deflator.2,ISIC_DESCRIPTION,TAB.CAT_DESCRIPTION)) %>%
-  group_by(TAB.CAT) %>%
-  summarise(
-    Y.2013=sum(Y_2013),
-    Y.2014=sum(Y_2014),
-    Y.2015=sum(Y_2015),
-    Y.2016=sum(Y_2016),
-    Y.2017=sum(Y_2017)
-  )
-
-# Real_Y
-PUB_Real_Y <- select(Real_Y,-c(STATID,Deflator.1,Deflator.2,ISIC_DESCRIPTION,TAB.CAT_DESCRIPTION)) %>%
   group_by(TAB.CAT) %>%
   summarise(
     Y.2013=sum(Y_2013),
