@@ -1,0 +1,165 @@
+---
+title: "Quarterly output National Accounts Reports & Analysis"
+output: html_notebook
+---
+
+
+Grouping by TAB.CAT for Publication tables.
+*Note: Year variables need to be expanded*
+```{r}
+# Nominal_Y
+PUB_Nominal_Y <- select(Nominal_Y,-c(STATID,Deflator.1,Deflator.2,ISIC_DESCRIPTION,TAB.CAT_DESCRIPTION)) %>%
+  group_by(TAB.CAT) %>%
+  summarise(
+    Y.2013=sum(Y_2013),
+    Y.2014=sum(Y_2014),
+    Y.2015=sum(Y_2015),
+    Y.2016=sum(Y_2016),
+    Y.2017=sum(Y_2017)
+  )
+
+# Nominal_Q
+PUB_Nominal_Q <- group_by(Nominal_Q,TAB.CAT) %>%
+  summarise(TAB.CAT_DESCRIPTION=first(TAB.CAT_DESCRIPTION),
+    Q.2013.1=sum(`2013-1`),
+    Q.2013.2=sum(`2013-2`),
+    Q.2013.3=sum(`2013-3`),
+    Q.2013.4=sum(`2013-4`),
+    Q.2014.1=sum(`2014-1`),
+    Q.2014.2=sum(`2014-2`),
+    Q.2014.3=sum(`2014-3`),
+    Q.2014.4=sum(`2014-4`),
+    Q.2015.1=sum(`2015-1`),
+    Q.2015.2=sum(`2015-2`),
+    Q.2015.3=sum(`2015-3`),
+    Q.2015.4=sum(`2015-4`),
+    Q.2016.1=sum(`2016-1`),
+    Q.2016.2=sum(`2016-2`),
+    Q.2016.3=sum(`2016-3`),
+    Q.2016.4=sum(`2016-4`),
+    Q.2017.1=sum(`2017-1`),
+    Q.2017.2=sum(`2017-2`),
+    Q.2017.3=sum(`2017-3`),
+    Q.2017.4=sum(`2017-4`)
+  )
+```
+
+Creating growth variables
+*Note: Year variables need to be expanded*
+```{r}
+PUB_Nominal_Y$g.2014  <- (PUB_Nominal_Y$Y.2014/PUB_Nominal_Y$Y.2013-1)*100
+PUB_Nominal_Y$g.2015  <- (PUB_Nominal_Y$Y.2015/PUB_Nominal_Y$Y.2014-1)*100
+PUB_Nominal_Y$g.2016  <- (PUB_Nominal_Y$Y.2016/PUB_Nominal_Y$Y.2015-1)*100
+PUB_Nominal_Y$g.2017  <- (PUB_Nominal_Y$Y.2017/PUB_Nominal_Y$Y.2016-1)*100
+```
+
+Create Treemap
+```{r}
+ggplot2::ggplot(PUB_Nominal_Y, ggplot2::aes(area = Y.2017, 
+                                            fill = g.2017,
+                                            label=TAB.CAT)) + 
+                                        geom_treemap()+
+                                        ggtitle("Nominal GDP 2017")+
+                                        geom_treemap_text()
+```
+
+For comparison purposes with the Central Bank estimates. This piece of code needs to flow from the results of this file rater than inputed as values.
+```{r}
+CBS.Nom.year          <-c(4836.2,
+                          4949.8,
+                          5225.9,
+                          5308.9,
+                          5476.0
+                          )
+
+CBA.Nom.year          <-c(4618.28796359993,
+                          4742.50216019128,
+                          4817.75420489927,
+                          4755.63855767319,
+                          4793.04253070106
+                          )
+```
+Converting to time series format and to graphs afterwards.
+```{r}
+CBS.Nom.year          <-ts(CBS.Nom.year,
+                           frequency = 1,
+                           start = 2013
+                           )
+
+CBA.Nom.year          <-ts(CBA.Nom.year, 
+                           frequency = 1,
+                           start=2013
+                           )
+
+#Converting times series to nice graphs
+Nominal.level <-cbind(CBS.Nom.year,CBA.Nom.year)
+dygraph(Nominal.level,
+        main="Nominal GDP (in Afl.)",
+        ylab="in Afl.",
+        xlab="Years")%>%
+  dyAxis("x", drawGrid = FALSE)%>%
+  dyOptions(axisLineColor = "navy", 
+            gridLineColor = "lightblue") 
+```
+
+Grouping by TAB.CAT for Publication tables
+*Note: Year variables need to be expanded*
+```{r}
+# Nominal_Y
+PUB_Nominal_Y <- select(Nominal_Y,-c(STATID,Deflator.1,Deflator.2,ISIC_DESCRIPTION,TAB.CAT_DESCRIPTION)) %>%
+  group_by(TAB.CAT) %>%
+  summarise(
+    Y.2013=sum(Y_2013),
+    Y.2014=sum(Y_2014),
+    Y.2015=sum(Y_2015),
+    Y.2016=sum(Y_2016),
+    Y.2017=sum(Y_2017)
+  )
+
+# Nominal_Q
+
+PUB_Nominal_Q <- group_by(Nominal_Q,TAB.CAT) %>%
+  summarise(TAB.CAT_DESCRIPTION=first(TAB.CAT_DESCRIPTION),
+    Q.2013.1=sum(`2013-1`),
+    Q.2013.2=sum(`2013-2`),
+    Q.2013.3=sum(`2013-3`),
+    Q.2013.4=sum(`2013-4`),
+    Q.2014.1=sum(`2014-1`),
+    Q.2014.2=sum(`2014-2`),
+    Q.2014.3=sum(`2014-3`),
+    Q.2014.4=sum(`2014-4`),
+    Q.2015.1=sum(`2015-1`),
+    Q.2015.2=sum(`2015-2`),
+    Q.2015.3=sum(`2015-3`),
+    Q.2015.4=sum(`2015-4`),
+    Q.2016.1=sum(`2016-1`),
+    Q.2016.2=sum(`2016-2`),
+    Q.2016.3=sum(`2016-3`),
+    Q.2016.4=sum(`2016-4`),
+    Q.2017.1=sum(`2017-1`),
+    Q.2017.2=sum(`2017-2`),
+    Q.2017.3=sum(`2017-3`),
+    Q.2017.4=sum(`2017-4`)
+  )
+```
+
+Create output in csv. Works. However, would like to have all the tabs combined.
+```{r}
+write.csv(Deflator, 
+          file =         "Output_Deflator.csv")
+write.csv(Nominal_Q, 
+          file =         "Output_Nominal_Q.csv")
+write.csv(Real_Q, 
+          file =         "Output_Real_Q.csv")
+write.csv(Nominal_Y, 
+          file =         "Output_Nominal_Y.csv")
+write.csv(Real_Y, 
+          file =         "Output_Real_Y.csv")
+write.csv(Test.equality, 
+          file =         "Output_Summary.csv")
+
+write.csv(PUB_Nominal_Y.L,
+          file =  "PUB_Nom_Y_L.csv")
+write.csv(PUB_Nominal_Q,
+          file =  "PUB_Nom_Q.csv")
+```
