@@ -305,8 +305,19 @@ Final_Real_Q  <- Final_Real_Q %>%
   summarise_all(sum)
 ```
 
-### Group to year
-Would also be good to at this stage compare the Nominal year number with the same aggregation produced here.
+### Fifth round: overall deflator
+
+```{r}
+Overall_Nom_Q <- (select(Nominal_Q,-redundant)) %>%
+  summarise_all(sum)
+Overall_Real_Q <- Real_Q%>%
+  summarise_all(sum)
+
+Overall_Deflator_Q <- Overall_Nom_Q / Overall_Real_Q * 100
+```
+
+It would be nice to add a section that summarizes the quarterly outputs into yearly columns.
 ```{r}
 
 ```
+
