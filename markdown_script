@@ -1,8 +1,11 @@
 ---
-title: "Quarterly output manipulation National Accounts"
+title: "Quarterly output National Accounts Manipulation"
 author: "Rendell E . de Kort"
 date: "May 25, 2019"
-output: word_document
+output:
+  word_document: default
+  html_document:
+    df_print: paged
 ---
 
 ## About this file
@@ -28,14 +31,8 @@ data1$Value  <-  as.numeric(data1$Value)
 ## Loading the required packages 
 In case you are doing this for the first time or the packages are not available in your library, install the required packages with the example code: install.packages("dplyr"). Note that the last line actually detaches the package "plyr". This is needed because it interferes with the "group_by" function from the dplyr package which we will be using later on. 
 ```{r, eval=FALSE, warning = FALSE, error = FALSE, message=FALSE}
-library(dplyr)
-library(tidyr)
-library(formattable)
-library(dygraphs)
-library(treemap)
-library(treemapify)
-library(ggplot2)
-library(formattable)
+## install.packages("pacman") if needed
+pacman::p_load(dplyr, tidyr, formattable, dygraphs, treemap, treemapify, ggplot2, formattable)
 detach(package:plyr)
 ```
 
@@ -157,108 +154,11 @@ dplyr::arrange(Real_Q,TAB.CAT)
 rm(variables)
 ```
 
-Grouping by TAB.CAT for Publication tables.
-*Note: Year variables need to be expanded*
-```{r}
-# Nominal_Y
-PUB_Nominal_Y <- select(Nominal_Y,-c(STATID,Deflator.1,Deflator.2,ISIC_DESCRIPTION,TAB.CAT_DESCRIPTION)) %>%
-  group_by(TAB.CAT) %>%
-  summarise(
-    Y.2013=sum(Y_2013),
-    Y.2014=sum(Y_2014),
-    Y.2015=sum(Y_2015),
-    Y.2016=sum(Y_2016),
-    Y.2017=sum(Y_2017)
-  )
-
-# Nominal_Q
-PUB_Nominal_Q <- group_by(Nominal_Q,TAB.CAT) %>%
-  summarise(TAB.CAT_DESCRIPTION=first(TAB.CAT_DESCRIPTION),
-    Q.2013.1=sum(`2013-1`),
-    Q.2013.2=sum(`2013-2`),
-    Q.2013.3=sum(`2013-3`),
-    Q.2013.4=sum(`2013-4`),
-    Q.2014.1=sum(`2014-1`),
-    Q.2014.2=sum(`2014-2`),
-    Q.2014.3=sum(`2014-3`),
-    Q.2014.4=sum(`2014-4`),
-    Q.2015.1=sum(`2015-1`),
-    Q.2015.2=sum(`2015-2`),
-    Q.2015.3=sum(`2015-3`),
-    Q.2015.4=sum(`2015-4`),
-    Q.2016.1=sum(`2016-1`),
-    Q.2016.2=sum(`2016-2`),
-    Q.2016.3=sum(`2016-3`),
-    Q.2016.4=sum(`2016-4`),
-    Q.2017.1=sum(`2017-1`),
-    Q.2017.2=sum(`2017-2`),
-    Q.2017.3=sum(`2017-3`),
-    Q.2017.4=sum(`2017-4`)
-  )
-```
-
-Creating growth variables
-*Note: Year variables need to be expanded*
-```{r}
-PUB_Nominal_Y$g.2014  <- (PUB_Nominal_Y$Y.2014/PUB_Nominal_Y$Y.2013-1)*100
-PUB_Nominal_Y$g.2015  <- (PUB_Nominal_Y$Y.2015/PUB_Nominal_Y$Y.2014-1)*100
-PUB_Nominal_Y$g.2016  <- (PUB_Nominal_Y$Y.2016/PUB_Nominal_Y$Y.2015-1)*100
-PUB_Nominal_Y$g.2017  <- (PUB_Nominal_Y$Y.2017/PUB_Nominal_Y$Y.2016-1)*100
-```
-
-Create Treemap
-```{r}
-ggplot2::ggplot(PUB_Nominal_Y, ggplot2::aes(area = Y.2017, 
-                                            fill = g.2017,
-                                            label=TAB.CAT)) + 
-                                        geom_treemap()+
-                                        ggtitle("Nominal GDP 2017")+
-                                        geom_treemap_text()
-```
 
 One more consistency check, checking the sum of the quarterly nominal GDP whether it adds up to the right amount for 2013.
 ```{r}
 Test.equality$q.check <- Nominal_Q$`2013-1`+Nominal_Q$`2013-2`+Nominal_Q$`2013-3`+Nominal_Q$`2013-4`
 Test.equality$Check2    <-Test.equality$`2013`==Test.equality$q.check
-```
-
-For comparison purposes with the Central Bank estimates. This piece of code needs to flow from the results of this file rater than inputed as values.
-```{r}
-CBS.Nom.year          <-c(4836.2,
-                          4949.8,
-                          5225.9,
-                          5308.9,
-                          5476.0
-                          )
-
-CBA.Nom.year          <-c(4618.28796359993,
-                          4742.50216019128,
-                          4817.75420489927,
-                          4755.63855767319,
-                          4793.04253070106
-                          )
-```
-Converting to time series format and to graphs afterwards.
-```{r}
-CBS.Nom.year          <-ts(CBS.Nom.year,
-                           frequency = 1,
-                           start = 2013
-                           )
-
-CBA.Nom.year          <-ts(CBA.Nom.year, 
-                           frequency = 1,
-                           start=2013
-                           )
-
-#Converting times series to nice graphs
-Nominal.level <-cbind(CBS.Nom.year,CBA.Nom.year)
-dygraph(Nominal.level,
-        main="Nominal GDP (in Afl.)",
-        ylab="in Afl.",
-        xlab="Years")%>%
-  dyAxis("x", drawGrid = FALSE)%>%
-  dyOptions(axisLineColor = "navy", 
-            gridLineColor = "lightblue") 
 ```
 
 # Creating the sequence calculation for deflators.
@@ -350,7 +250,9 @@ Group_Deflator_Q[is.nan(Group_Deflator_Q)] <- 0
 Group_Deflator_Q <- bind_cols(select(Group_Nom_Q, TAB.CAT),Group_Deflator_Q)
 
 # expanding the group deflators to voer all ISICs.
-expand_round_2 <- c(1,9,1,3,3,16,11,3,5,8,5,5,9,4,3,4,4,5,1,1)
+expand_round_2 <- table(Nominal_Q$TAB.CAT) %>%
+  as.vector()%>%
+  as.numeric()
 
 Group_Deflator_Q <- uncount(Group_Deflator_Q, expand_round_2)
 Group_Deflator_Q <- select(Group_Deflator_Q,-c(TAB.CAT)) * Vector_Group
@@ -358,7 +260,8 @@ Group_Deflator_Q <- select(Group_Deflator_Q,-c(TAB.CAT)) * Vector_Group
 Group_Nom_Q      <-(select(Nominal_Q,-redundant)
                   * Vector_Group
                   )
-Group_Real_Q <- Group_Nom_Q / Group_Deflator_Q / 100
+# Is this calculation correct???                                                                  # Need to verify 
+Group_Real_Q <- Group_Nom_Q * Group_Deflator_Q / 100 
 Group_Real_Q[is.nan(Group_Real_Q)] <- 0
 ```
 
@@ -375,7 +278,9 @@ All_Real_Q  <- All_Real_Q %>%
 
 All_Deflator_Q <- All_Nom_Q / All_Real_Q *100
 
-expand_round_3 <- 101
+expand_round_3 <- count(Nominal_Q) %>%
+  as.numeric()
+
 All_Deflator_Q <- uncount(All_Deflator_Q, expand_round_3)
 All_Deflator_Q <- All_Deflator_Q * Vector_All
 ```
@@ -383,75 +288,25 @@ All_Deflator_Q <- All_Deflator_Q * Vector_All
 # Fourth round: complete final table
 ```{r}
 Deflator_Q <- Own_Deflator_Q+ Group_Deflator_Q+All_Deflator_Q
-Real_Q <- select(Nominal_Q,-c(Werk.ISIC,TAB.CAT,TAB.CAT_DESCRIPTION,Deflator.2)) / Deflator_Q / 100
+# Is this calculation coorect?                                                                      # Need to verify
+Real_Q <- select(Nominal_Q,-c(Werk.ISIC,TAB.CAT,TAB.CAT_DESCRIPTION,Deflator.2)) * Deflator_Q / 100 
+
 Real_Q[is.nan(Real_Q)] <- 0
+
+# final 
+  
+Final_Nom_Q  <- All_Nom_Q + Group_Nom_Q  + Own_Nom_Q
+All_Real_Q   <- All_Real_Q + Group_Real_Q + Own_Real_Q
+
+Final_Nom_Q  <- Final_Nom_Q %>%
+  summarise_all(sum)
+
+Final_Real_Q  <- Final_Real_Q %>%
+  summarise_all(sum)
 ```
 
 ### Group to year
 Would also be good to at this stage compare the Nominal year number with the same aggregation produced here.
 ```{r}
-Nominal  <- 
-```
 
-
-Grouping by TAB.CAT for Publication tables
-*Note: Year variables need to be expanded*
-```{r}
-# Nominal_Y
-PUB_Nominal_Y <- select(Nominal_Y,-c(STATID,Deflator.1,Deflator.2,ISIC_DESCRIPTION,TAB.CAT_DESCRIPTION)) %>%
-  group_by(TAB.CAT) %>%
-  summarise(
-    Y.2013=sum(Y_2013),
-    Y.2014=sum(Y_2014),
-    Y.2015=sum(Y_2015),
-    Y.2016=sum(Y_2016),
-    Y.2017=sum(Y_2017)
-  )
-
-# Nominal_Q
-
-PUB_Nominal_Q <- group_by(Nominal_Q,TAB.CAT) %>%
-  summarise(TAB.CAT_DESCRIPTION=first(TAB.CAT_DESCRIPTION),
-    Q.2013.1=sum(`2013-1`),
-    Q.2013.2=sum(`2013-2`),
-    Q.2013.3=sum(`2013-3`),
-    Q.2013.4=sum(`2013-4`),
-    Q.2014.1=sum(`2014-1`),
-    Q.2014.2=sum(`2014-2`),
-    Q.2014.3=sum(`2014-3`),
-    Q.2014.4=sum(`2014-4`),
-    Q.2015.1=sum(`2015-1`),
-    Q.2015.2=sum(`2015-2`),
-    Q.2015.3=sum(`2015-3`),
-    Q.2015.4=sum(`2015-4`),
-    Q.2016.1=sum(`2016-1`),
-    Q.2016.2=sum(`2016-2`),
-    Q.2016.3=sum(`2016-3`),
-    Q.2016.4=sum(`2016-4`),
-    Q.2017.1=sum(`2017-1`),
-    Q.2017.2=sum(`2017-2`),
-    Q.2017.3=sum(`2017-3`),
-    Q.2017.4=sum(`2017-4`)
-  )
-```
-
-Create output in csv. Works. However, would like to have all the tabs combined.
-```{r}
-write.csv(Deflator, 
-          file =         "Output_Deflator.csv")
-write.csv(Nominal_Q, 
-          file =         "Output_Nominal_Q.csv")
-write.csv(Real_Q, 
-          file =         "Output_Real_Q.csv")
-write.csv(Nominal_Y, 
-          file =         "Output_Nominal_Y.csv")
-write.csv(Real_Y, 
-          file =         "Output_Real_Y.csv")
-write.csv(Test.equality, 
-          file =         "Output_Summary.csv")
-
-write.csv(PUB_Nominal_Y.L,
-          file =  "PUB_Nom_Y_L.csv")
-write.csv(PUB_Nominal_Q,
-          file =  "PUB_Nom_Q.csv")
 ```
