@@ -316,8 +316,22 @@ Overall_Real_Q <- Real_Q%>%
 Overall_Deflator_Q <- Overall_Nom_Q / Overall_Real_Q * 100
 ```
 
-It would be nice to add a section that summarizes the quarterly outputs into yearly columns.
+Summarizing the quarterly outputs into yearly columns.
 ```{r}
+Y.2013 <-c("2013-1","2013-2","2013-3","2013-4")
+Y.2014 <-c("2014-1","2014-2","2014-3","2014-4")
+Y.2015 <-c("2015-1","2015-2","2015-3","2015-4")
+Y.2016 <-c("2016-1","2016-2","2016-3","2016-4")
+Y.2017 <-c("2017-1","2017-2","2017-3","2017-4")
+
+Overall_Nom_Y <- select(Nominal_Q, redundant)
+Overall_Nom_Y$Y.2013 <- rowSums(Nominal_Q[,Y.2013])
+Overall_Nom_Y$Y.2014 <- rowSums(Nominal_Q[,Y.2014])
+Overall_Nom_Y$Y.2015 <- rowSums(Nominal_Q[,Y.2015])
+Overall_Nom_Y$Y.2016 <- rowSums(Nominal_Q[,Y.2016])
+Overall_Nom_Y$Y.2017 <- rowSums(Nominal_Q[,Y.2017])
+
+Test.equality.2 <- select(Nominal_Y,-c(STATID,TAB.CAT,Deflator.1,Deflator.2,TAB.CAT_DESCRIPTION,ISIC_DESCRIPTION))- select(Overall_Nom_Y,-redundant) %>%
+  round(digits=2)
 
 ```
-
