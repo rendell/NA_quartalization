@@ -1,19 +1,19 @@
 ---
-title: "Quarterly output National Accounts Manipulation"
+title: "Quarterly National Accounts Manipulation"
 author: "Rendell E . de Kort"
 date: "May 25, 2019"
 output:
-  word_document: default
   html_document:
     df_print: paged
+  word_document: default
 ---
 
-## About this file
+# About this file
 This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
 
 This is an explanatory note for the steps to convert quarterly output information obtained through the "Herbynization", "quarterly estimation" and "Stavaza" files.
 
-## Reading in the data
+# Reading in the data
 First we load the 3 required data files. Here it is important to note that all the files are properly saved with the same name as mentioned below and as "Comma Separated Values (.csv)" rather than in excel format.
 
 Before loading the files, also make sure that the working directory refers to the correct folder for the R session to pull files from. This can e adjusted in the menu Session -> Set Working Directory -> Choose Directory. This is done automatically with the code following below. Though it needs to be adjusted for the environment at the CBS.
@@ -28,7 +28,7 @@ stavaza      <-  read.csv("stavazaR.csv",    stringsAsFactors = FALSE)
 data1$Value  <-  as.numeric(data1$Value)
 ```
 
-## Loading the required packages 
+# Loading the required packages 
 In case you are doing this for the first time or the packages are not available in your library, install the required packages with the example code: install.packages("dplyr"). Note that the last line actually detaches the package "plyr". This is needed because it interferes with the "group_by" function from the dplyr package which we will be using later on. 
 ```{r, eval=FALSE, warning = FALSE, error = FALSE, message=FALSE}
 ## install.packages("pacman") if needed
@@ -37,7 +37,7 @@ detach(package:plyr)
 ```
 
 Combining data sets to a single dataframe (tbl_df format). To keep the global environment clean we only keep the combined dataframe.
-```{r, results='hide', warning = FALSE, error = FALSE, message=FALSE}
+```{r, warning = FALSE, error = FALSE, message=FALSE, eval = FALSE}
 data1                  <- tbl_df(data1)
 data2                  <- tbl_df(data2)
 databind               <- bind_rows(data1,data2)
@@ -47,7 +47,7 @@ dplyr::arrange(databind,STATID)
 ```
 
 Filtering data to contain the variables that we are interested in seperatly
-```{r}
+```{r, eval = FALSE}
 Nominal_Q                <- filter(databind,databind$Description=="Nominal VA")
 Nominal_Q$Description    <- NULL
 
@@ -61,14 +61,14 @@ rm(databind)
 ```
 
 Long to wide format. We change the orientation of the data to facilitate further manipulation.
-```{r}
+```{r, eval = FALSE}
 Nominal_Q    <-spread(Nominal_Q,Period,Value)
 Nominal_Y    <-spread(Nominal_Y,Period,Value)
 Real_Q       <-spread(Real_Q,Period,Value)
 ```
 
 Creating a check to verify whether the year figures are consistent with Stavaza
-```{r, results = 'hide'}
+```{r, eval = FALSE}
 Check.Nominal.Y.2013   <-select(Nominal_Y,STATID,`2013`)
 
 as.character(stavaza$Werk.ISIC)
@@ -99,7 +99,7 @@ rm(stavaza_temp)
 
 Changing the variable names for consistency. 
 *Note: Year variables need to be expanded*
-```{r}
+```{r, eval = FALSE}
 years <- c("STATID",
                                    "Y_2013",
                                    "Y_2014",
@@ -113,7 +113,7 @@ rm(years)
 
 The left_join function merges two data sets and after that we select and arrange the variables.
 *Note: Year variables need to be expanded*
-```{r, results = 'hide'}
+```{r, eval = FALSE}
 variables <- c("STATID",
                "TAB.CAT",
                "Deflator.1",
@@ -156,15 +156,17 @@ rm(variables)
 
 
 One more consistency check, checking the sum of the quarterly nominal GDP whether it adds up to the right amount for 2013.
-```{r}
+```{r, eval = FALSE}
 Test.equality$q.check <- Nominal_Q$`2013-1`+Nominal_Q$`2013-2`+Nominal_Q$`2013-3`+Nominal_Q$`2013-4`
 Test.equality$Check2    <-Test.equality$`2013`==Test.equality$q.check
 ```
 
-# Creating the sequence calculation for deflators.
+# Creating the sequence calculation for deflators (5 steps).
 First step is to perform the calculation on variables pertaining to the "Own" deflator category. 
 To do this we are creating vectors which we can use to multiply the dataframes with.
-```{r}
+
+## First round
+```{r, eval = FALSE}
 Vector_Own   <- if_else(Nominal_Q$Deflator.2=="Own",1,0)
 Vector_Group <- if_else(Nominal_Q$Deflator.2=="Group",1,0)
 Vector_All   <- if_else(Nominal_Q$Deflator.2=="All",1,0)
@@ -192,8 +194,8 @@ do.call(cbind, lapply(x, is.nan))
 Own_Deflator_Q[is.nan(Own_Deflator_Q)] <- 0
 ```
 
-# Second round: Group 
-```{r}
+## Second round: Group 
+```{r, eval = FALSE}
 Group_Nom_Q  <- bind_cols(Own_Nom_Q, select(Nominal_Q, TAB.CAT))
              
 Group_Nom_Q <- group_by(Group_Nom_Q, TAB.CAT) %>%
@@ -265,8 +267,8 @@ Group_Real_Q <- Group_Nom_Q * Group_Deflator_Q / 100
 Group_Real_Q[is.nan(Group_Real_Q)] <- 0
 ```
 
-# Third round: create deflator for all
-```{r}
+## Third round: create deflator for all
+```{r, eval = FALSE}
 All_Nom_Q  <- Group_Nom_Q  + Own_Nom_Q
 All_Real_Q <- Group_Real_Q + Own_Real_Q
 
@@ -285,8 +287,8 @@ All_Deflator_Q <- uncount(All_Deflator_Q, expand_round_3)
 All_Deflator_Q <- All_Deflator_Q * Vector_All
 ```
 
-# Fourth round: complete final table
-```{r}
+## Fourth round: complete final table
+```{r, eval = FALSE}
 Deflator_Q <- Own_Deflator_Q+ Group_Deflator_Q+All_Deflator_Q
 # Is this calculation coorect?                                                                      # Deflation
 Real_Q <- select(Nominal_Q,-c(Werk.ISIC,TAB.CAT,TAB.CAT_DESCRIPTION,Deflator.2)) * Deflator_Q / 100 
@@ -305,8 +307,8 @@ Final_Real_Q  <- Final_Real_Q %>%
   summarise_all(sum)
 ```
 
-### Fifth round: overall deflator
-```{r}
+## Fifth round: overall deflator
+```{r, eval = FALSE}
 Overall_Nom_Q <- (select(Nominal_Q,-redundant)) %>%
   summarise_all(sum)
 Overall_Real_Q <- Real_Q%>%
@@ -315,8 +317,8 @@ Overall_Real_Q <- Real_Q%>%
 Overall_Deflator_Q <- Overall_Nom_Q / Overall_Real_Q * 100                                        # Deflation
 ```
 
-Summarizing the quarterly outputs into yearly columns.
-```{r}
+# Summarizing the quarterly outputs into yearly columns.
+```{r, eval = FALSE}
 Y.2013 <-c("2013-1","2013-2","2013-3","2013-4")
 Y.2014 <-c("2014-1","2014-2","2014-3","2014-4")
 Y.2015 <-c("2015-1","2015-2","2015-3","2015-4")
@@ -332,7 +334,6 @@ Overall_Nom_Y$Y.2017 <- rowSums(Nominal_Q[,Y.2017])
 
 Test.equality.2 <- select(Nominal_Y,-c(STATID,TAB.CAT,Deflator.1,Deflator.2,TAB.CAT_DESCRIPTION,ISIC_DESCRIPTION))- select(Overall_Nom_Y,-redundant) %>%
   round(digits=2)
-
 
 Overall_Real_Y <- Real_Q
 Overall_Real_Y$Y.2013 <- rowSums(Real_Q[,Y.2013])
