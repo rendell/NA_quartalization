@@ -9,9 +9,9 @@ output:
 ---
 
 # About this file
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>. the same file is therefore also available as a script, which ca be used to run the calculations in R.
 
-This is an explanatory note for the steps to convert quarterly output information obtained through the "Herbynization", "quarterly estimation" and "Stavaza" files.
+This document contains explanatory notes and the R syntax for the steps to convert quarterly output information obtained through the "Herbynization", "quarterly estimation" and "Stavaza" excel files.
 
 # Reading in the data
 First we load the 3 required data files. Here it is important to note that all the files are properly saved with the same name as mentioned below and as "Comma Separated Values (.csv)" rather than in excel format.
@@ -21,6 +21,9 @@ Before loading the files, also make sure that the working directory refers to th
 setwd("~/CBS NA/R/20190328")
 ```
 
+The intention is for these 3 files to be frozen in a folder on the network each time a new version of Quarterly is produced. However, at all times, an up to date version of "stavazaR" should be maintained on the network as it contains the meta data on the iSICs.
+
+Since the data1$Value variables is not imported in as type numeric, the last line of code adjusts for that.
 ```{r, eval = FALSE, warning = FALSE, error = FALSE}
 data1        <-  read.csv("Q_DENTON.csv",    stringsAsFactors = FALSE)
 data2        <-  read.csv("Q_NO_DENTON.csv", stringsAsFactors = FALSE)
@@ -29,13 +32,16 @@ data1$Value  <-  as.numeric(data1$Value)
 ```
 
 # Loading the required packages 
-In case you are doing this for the first time or the packages are not available in your library, install the required packages with the example code: install.packages("dplyr"). Note that the last line actually detaches the package "plyr". This is needed because it interferes with the "group_by" function from the dplyr package which we will be using later on. 
+In case you are doing this for the first time or the packages are not available in your library, install the required packages with the example code: install.packages("dplyr"). Note that the last line actually detaches the package "plyr". This is needed because if it is lodaded it will interfere with the "group_by" function from the dplyr package which we will be using later on. 
+
+pacman referes to a package of that name that aids with the loading of the packages. If it does not function or if not available it is also possible to load the packages individually e.g. install.packages("dplyr").
 ```{r, eval=FALSE, warning = FALSE, error = FALSE, message=FALSE}
 ## install.packages("pacman") if needed
-pacman::p_load(dplyr, tidyr, formattable, dygraphs, treemap, treemapify, ggplot2, formattable)
+pacman::p_load(dplyr, tidyr)
 detach(package:plyr)
 ```
 
+# Combining data sets
 Combining data sets to a single dataframe (tbl_df format). To keep the global environment clean we only keep the combined dataframe.
 ```{r, warning = FALSE, error = FALSE, message=FALSE, eval = FALSE}
 data1                  <- tbl_df(data1)
@@ -46,7 +52,8 @@ rm(data2)
 dplyr::arrange(databind,STATID)
 ```
 
-Filtering data to contain the variables that we are interested in seperatly
+# Filtering data
+Filtering data to contain the variables that we are interested in seperatly. In principle the only variables that are needed are Nominal_Q and Real_Q. The deflators can be calculated by dividing the two. Aditionally we also load the Nominal_Y variable, but only to perform consistency checks.
 ```{r, eval = FALSE}
 Nominal_Q                <- filter(databind,databind$Description=="Nominal VA")
 Nominal_Q$Description    <- NULL
@@ -60,14 +67,16 @@ Nominal_Y$Description    <- NULL
 rm(databind)
 ```
 
-Long to wide format. We change the orientation of the data to facilitate further manipulation.
+# Long to wide format 
+We change the orientation of the data to facilitate further manipulation.
 ```{r, eval = FALSE}
 Nominal_Q    <-spread(Nominal_Q,Period,Value)
 Nominal_Y    <-spread(Nominal_Y,Period,Value)
 Real_Q       <-spread(Real_Q,Period,Value)
 ```
 
-Creating a check to verify whether the year figures are consistent with Stavaza
+# Consistency check
+Creating a check to verify whether the year figures are consistent with what is maintained in the Stavaza file.
 ```{r, eval = FALSE}
 Check.Nominal.Y.2013   <-select(Nominal_Y,STATID,`2013`)
 
@@ -155,6 +164,7 @@ rm(variables)
 ```
 
 
+# Consistency check
 One more consistency check, checking the sum of the quarterly nominal GDP whether it adds up to the right amount for 2013.
 ```{r, eval = FALSE}
 Test.equality$q.check <- Nominal_Q$`2013-1`+Nominal_Q$`2013-2`+Nominal_Q$`2013-3`+Nominal_Q$`2013-4`
@@ -162,10 +172,16 @@ Test.equality$Check2    <-Test.equality$`2013`==Test.equality$q.check
 ```
 
 # Creating the sequence calculation for deflators (5 steps).
-First step is to perform the calculation on variables pertaining to the "Own" deflator category. 
-To do this we are creating vectors which we can use to multiply the dataframes with.
+The deflation process is rather tricky and involves different steps. While most ISICs are supplied with their relevant deflators, there are ISICs for which a deflator is not available.
+
+To work around this issues there are fa ew ISICs that follow whatever deflator is calculated within their group.However, there are also ISICs that follow the overall deflator.
+THis process is divided in 5 steps outlined below:
 
 ## First round
+First step is to perform the calculation on variables pertaining to the "Own" deflator category. 
+To do this we are creating vectors which we can use to multiply the dataframes with. So that only the relevant lines are filled in. 
+
+There is alsoa function which we can call up to substitute the "NaN" that appears when 0 is multiplyed by 0. 
 ```{r, eval = FALSE}
 Vector_Own   <- if_else(Nominal_Q$Deflator.2=="Own",1,0)
 Vector_Group <- if_else(Nominal_Q$Deflator.2=="Group",1,0)
@@ -262,7 +278,7 @@ Group_Deflator_Q <- select(Group_Deflator_Q,-c(TAB.CAT)) * Vector_Group
 Group_Nom_Q      <-(select(Nominal_Q,-redundant)
                   * Vector_Group
                   )
-# Is this calculation correct???                                                                  # Deflation 
+                                                                                                          # Deflation 
 Group_Real_Q <- Group_Nom_Q * Group_Deflator_Q / 100 
 Group_Real_Q[is.nan(Group_Real_Q)] <- 0
 ```
@@ -297,7 +313,7 @@ Real_Q[is.nan(Real_Q)] <- 0
 # final 
   
 Final_Nom_Q  <- All_Nom_Q + Group_Nom_Q  + Own_Nom_Q
-FInal_Real_Q   <- All_Real_Q + Group_Real_Q + Own_Real_Q
+Final_Real_Q   <- All_Real_Q + Group_Real_Q + Own_Real_Q
 
 Final_Nom_Q  <- Final_Nom_Q %>%
   summarise_all(sum)
