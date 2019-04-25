@@ -244,7 +244,7 @@ Group_Real_Q <- group_by(Group_Real_Q, TAB.CAT) %>%
             N.2017.4=sum(`2017-4`)
             )
 
-Group_Deflator_Q <- select(Group_Nom_Q, -c(TAB.CAT)) / select(Group_Real_Q,-c(TAB.CAT)) *100
+Group_Deflator_Q <- select(Group_Nom_Q, -c(TAB.CAT)) / select(Group_Real_Q,-c(TAB.CAT)) *100      # Deflation
 Group_Deflator_Q[is.nan(Group_Deflator_Q)] <- 0
 
 Group_Deflator_Q <- bind_cols(select(Group_Nom_Q, TAB.CAT),Group_Deflator_Q)
@@ -260,7 +260,7 @@ Group_Deflator_Q <- select(Group_Deflator_Q,-c(TAB.CAT)) * Vector_Group
 Group_Nom_Q      <-(select(Nominal_Q,-redundant)
                   * Vector_Group
                   )
-# Is this calculation correct???                                                                  # Need to verify 
+# Is this calculation correct???                                                                  # Deflation 
 Group_Real_Q <- Group_Nom_Q * Group_Deflator_Q / 100 
 Group_Real_Q[is.nan(Group_Real_Q)] <- 0
 ```
@@ -288,7 +288,7 @@ All_Deflator_Q <- All_Deflator_Q * Vector_All
 # Fourth round: complete final table
 ```{r}
 Deflator_Q <- Own_Deflator_Q+ Group_Deflator_Q+All_Deflator_Q
-# Is this calculation coorect?                                                                      # Need to verify
+# Is this calculation coorect?                                                                      # Deflation
 Real_Q <- select(Nominal_Q,-c(Werk.ISIC,TAB.CAT,TAB.CAT_DESCRIPTION,Deflator.2)) * Deflator_Q / 100 
 
 Real_Q[is.nan(Real_Q)] <- 0
@@ -306,14 +306,13 @@ Final_Real_Q  <- Final_Real_Q %>%
 ```
 
 ### Fifth round: overall deflator
-
 ```{r}
 Overall_Nom_Q <- (select(Nominal_Q,-redundant)) %>%
   summarise_all(sum)
 Overall_Real_Q <- Real_Q%>%
   summarise_all(sum)
 
-Overall_Deflator_Q <- Overall_Nom_Q / Overall_Real_Q * 100
+Overall_Deflator_Q <- Overall_Nom_Q / Overall_Real_Q * 100                                        # Deflation
 ```
 
 Summarizing the quarterly outputs into yearly columns.
@@ -334,4 +333,22 @@ Overall_Nom_Y$Y.2017 <- rowSums(Nominal_Q[,Y.2017])
 Test.equality.2 <- select(Nominal_Y,-c(STATID,TAB.CAT,Deflator.1,Deflator.2,TAB.CAT_DESCRIPTION,ISIC_DESCRIPTION))- select(Overall_Nom_Y,-redundant) %>%
   round(digits=2)
 
+
+Overall_Real_Y <- Real_Q
+Overall_Real_Y$Y.2013 <- rowSums(Real_Q[,Y.2013])
+Overall_Real_Y$Y.2014 <- rowSums(Real_Q[,Y.2014])
+Overall_Real_Y$Y.2015 <- rowSums(Real_Q[,Y.2015])
+Overall_Real_Y$Y.2016 <- rowSums(Real_Q[,Y.2016])
+Overall_Real_Y$Y.2017 <- rowSums(Real_Q[,Y.2017])
+
+Overall_Real_Y_total <- Overall_Real_Y%>%
+  summarise_all(sum)
+
+Overall_Real_Y_total <- select(Overall_Real_Y_total,c("Y.2013","Y.2014","Y.2015","Y.2016","Y.2017"))
+
+Overall_Nom_Y_total <- Overall_Nom_Y %>%
+  select(-c(Werk.ISIC,TAB.CAT,TAB.CAT_DESCRIPTION,Deflator.2)) %>%
+  summarise_all(sum)
+
+Overall_Deflator_Y_total <- Overall_Nom_Y_total / Overall_Real_Y_total * 100                         # Deflation
 ```
