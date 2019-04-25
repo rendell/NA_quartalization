@@ -272,13 +272,13 @@ Group_Real_Q[is.nan(Group_Real_Q)] <- 0
 All_Nom_Q  <- Group_Nom_Q  + Own_Nom_Q
 All_Real_Q <- Group_Real_Q + Own_Real_Q
 
-All_Nom_Q  <- All_Nom_Q %>%
+All_Nom_Q_sum  <- All_Nom_Q %>%
   summarise_all(sum)
 
-All_Real_Q  <- All_Real_Q %>%
+All_Real_Q_sum  <- All_Real_Q %>%
   summarise_all(sum)
 
-All_Deflator_Q <- All_Nom_Q / All_Real_Q *100
+All_Deflator_Q <- All_Nom_Q_sum / All_Real_Q_sum *100
 
 expand_round_3 <- count(Nominal_Q) %>%
   as.numeric()
@@ -290,15 +290,14 @@ All_Deflator_Q <- All_Deflator_Q * Vector_All
 ## Fourth round: complete final table
 ```{r, eval = FALSE}
 Deflator_Q <- Own_Deflator_Q+ Group_Deflator_Q+All_Deflator_Q
-# Is this calculation coorect?                                                                      # Deflation
-Real_Q <- select(Nominal_Q,-c(Werk.ISIC,TAB.CAT,TAB.CAT_DESCRIPTION,Deflator.2)) * Deflator_Q / 100 
+Real_Q <- select(Nominal_Q,-c(Werk.ISIC,TAB.CAT,TAB.CAT_DESCRIPTION,Deflator.2)) * Deflator_Q / 100       # Deflation
 
 Real_Q[is.nan(Real_Q)] <- 0
 
 # final 
   
 Final_Nom_Q  <- All_Nom_Q + Group_Nom_Q  + Own_Nom_Q
-All_Real_Q   <- All_Real_Q + Group_Real_Q + Own_Real_Q
+FInal_Real_Q   <- All_Real_Q + Group_Real_Q + Own_Real_Q
 
 Final_Nom_Q  <- Final_Nom_Q %>%
   summarise_all(sum)
