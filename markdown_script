@@ -5,6 +5,7 @@ date: "May 25, 2019"
 output:
   html_document:
     df_print: paged
+  pdf_document: default
   word_document: default
 ---
 
@@ -104,6 +105,8 @@ Test.equality$Check    <-Test.equality$`2013`==Test.equality$B1.g
 Test.equality          <- Test.equality[,c(1,3,4,5,2,6,7)]
 dplyr::arrange(Test.equality,Werk.ISIC)
 rm(stavaza_temp)
+
+# Query line all false only. 
 ```
 
 Changing the variable names for consistency. 
@@ -169,6 +172,7 @@ One more consistency check, checking the sum of the quarterly nominal GDP whethe
 ```{r, eval = FALSE}
 Test.equality$q.check <- Nominal_Q$`2013-1`+Nominal_Q$`2013-2`+Nominal_Q$`2013-3`+Nominal_Q$`2013-4`
 Test.equality$Check2    <-Test.equality$`2013`==Test.equality$q.check
+#Query to select FALSE
 ```
 
 # Creating the sequence calculation for deflators (5 steps).
@@ -201,7 +205,8 @@ Own_Real_Q     <-(select(Real_Q,-redundant)
                   * Vector_Own
                   )
 
-Own_Deflator_Q <- Own_Nom_Q / Own_Real_Q *100
+Own_Deflator_Q <- Own_Nom_Q / Own_Real_Q *100                                                     # Deflation
+# consistency check maybe add
 
 # Little function to enable us to remove the "Nan" to "0"
 is.nan.data.frame <- function(x)
@@ -278,40 +283,46 @@ Group_Deflator_Q <- select(Group_Deflator_Q,-c(TAB.CAT)) * Vector_Group
 Group_Nom_Q      <-(select(Nominal_Q,-redundant)
                   * Vector_Group
                   )
-                                                                                                          # Deflation 
-Group_Real_Q <- Group_Nom_Q * Group_Deflator_Q / 100 
+                                                                                                 # Deflation adjusted
+Group_Real_Q <- Group_Nom_Q / Group_Deflator_Q * 100 
 Group_Real_Q[is.nan(Group_Real_Q)] <- 0
 ```
 
 ## Third round: create deflator for all
 ```{r, eval = FALSE}
-All_Nom_Q  <- Group_Nom_Q  + Own_Nom_Q
-All_Real_Q <- Group_Real_Q + Own_Real_Q
+Agg_Nom_Q  <- Group_Nom_Q  + Own_Nom_Q
+Agg_Real_Q <- Group_Real_Q + Own_Real_Q
 
-All_Nom_Q_sum  <- All_Nom_Q %>%
+Agg_Nom_Q_sum  <- Agg_Nom_Q %>%
   summarise_all(sum)
 
-All_Real_Q_sum  <- All_Real_Q %>%
+Agg_Real_Q_sum  <- Agg_Real_Q %>%
   summarise_all(sum)
 
-All_Deflator_Q <- All_Nom_Q_sum / All_Real_Q_sum *100
+Agg_Deflator_Q <- Agg_Nom_Q_sum / Agg_Real_Q_sum *100                                                   # Deflator
 
 expand_round_3 <- count(Nominal_Q) %>%
   as.numeric()
 
-All_Deflator_Q <- uncount(All_Deflator_Q, expand_round_3)
+All_Deflator_Q <- uncount(Agg_Deflator_Q, expand_round_3)
 All_Deflator_Q <- All_Deflator_Q * Vector_All
+
+All_Nom_Q <- select(Nominal_Q,-c(Werk.ISIC,TAB.CAT,TAB.CAT_DESCRIPTION,Deflator.2)) * Vector_All
+
+All_Real_Q <- All_Nom_Q / All_Deflator_Q * 100                                                         # Deflator
+All_Real_Q[is.nan(All_Real_Q)] <- 0
+
 ```
 
-## Fourth round: complete final table
+## Fourth round: complete final table.
+Merging 
 ```{r, eval = FALSE}
 Deflator_Q <- Own_Deflator_Q+ Group_Deflator_Q+All_Deflator_Q
-Real_Q <- select(Nominal_Q,-c(Werk.ISIC,TAB.CAT,TAB.CAT_DESCRIPTION,Deflator.2)) * Deflator_Q / 100       # Deflation
+Real_Q     <- select(Nominal_Q,-c(Werk.ISIC,TAB.CAT,TAB.CAT_DESCRIPTION,Deflator.2)) / Deflator_Q * 100    # Deflation
 
 Real_Q[is.nan(Real_Q)] <- 0
 
 # final 
-  
 Final_Nom_Q  <- All_Nom_Q + Group_Nom_Q  + Own_Nom_Q
 Final_Real_Q   <- All_Real_Q + Group_Real_Q + Own_Real_Q
 
