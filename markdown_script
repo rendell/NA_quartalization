@@ -267,7 +267,7 @@ Group_Real_Q <- group_by(Group_Real_Q, TAB.CAT) %>%
             N.2017.4=sum(`2017-4`)
             )
 
-Group_Deflator_Q <- select(Group_Nom_Q, -c(TAB.CAT)) / select(Group_Real_Q,-c(TAB.CAT)) *100      # Deflation
+Group_Deflator_Q <- select(Group_Nom_Q, -c(TAB.CAT)) / select(Group_Real_Q,-c(TAB.CAT)) *100        # Deflation
 Group_Deflator_Q[is.nan(Group_Deflator_Q)] <- 0
 
 Group_Deflator_Q <- bind_cols(select(Group_Nom_Q, TAB.CAT),Group_Deflator_Q)
@@ -283,8 +283,8 @@ Group_Deflator_Q <- select(Group_Deflator_Q,-c(TAB.CAT)) * Vector_Group
 Group_Nom_Q      <-(select(Nominal_Q,-redundant)
                   * Vector_Group
                   )
-                                                                                                 # Deflation adjusted
-Group_Real_Q <- Group_Nom_Q / Group_Deflator_Q * 100 
+
+Group_Real_Q <- Group_Nom_Q / Group_Deflator_Q * 100                                              # Deflation adjusted
 Group_Real_Q[is.nan(Group_Real_Q)] <- 0
 ```
 
@@ -370,7 +370,7 @@ Overall_Real_Y$Y.2017 <- rowSums(Real_Q[,Y.2017])
 
 Overall_Real_Y_total <- Overall_Real_Y%>%
   summarise_all(sum)
-
+  
 Overall_Real_Y_total <- select(Overall_Real_Y_total,c("Y.2013","Y.2014","Y.2015","Y.2016","Y.2017"))
 
 Overall_Nom_Y_total <- Overall_Nom_Y %>%
