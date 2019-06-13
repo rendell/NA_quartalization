@@ -1,381 +1,242 @@
 ---
-title: "Quarterly National Accounts Manipulation"
-author: "Rendell E . de Kort"
-date: "May 25, 2019"
-output:
-  html_document:
-    df_print: paged
-  pdf_document: default
-  word_document: default
+title: "NA merging"
+output: html_notebook
 ---
-
-# About this file
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>. the same file is therefore also available as a script, which ca be used to run the calculations in R.
-
-This document contains explanatory notes and the R syntax for the steps to convert quarterly output information obtained through the "Herbynization", "quarterly estimation" and "Stavaza" excel files.
-
-# Reading in the data
-First we load the 3 required data files. Here it is important to note that all the files are properly saved with the same name as mentioned below and as "Comma Separated Values (.csv)" rather than in excel format.
-
-Before loading the files, also make sure that the working directory refers to the correct folder for the R session to pull files from. This can e adjusted in the menu Session -> Set Working Directory -> Choose Directory. This is done automatically with the code following below. Though it needs to be adjusted for the environment at the CBS.
-```{r, eval = FALSE, warning = FALSE, error = FALSE}
-setwd("~/CBS NA/R/20190328")
+Set working directory
+```{r}
+setwd("~/CBS NA/Berdrijsregister")
 ```
 
-The intention is for these 3 files to be frozen in a folder on the network each time a new version of Quarterly is produced. However, at all times, an up to date version of "stavazaR" should be maintained on the network as it contains the meta data on the iSICs.
+Read in data. Data obtained from Jose. 
+```{r}
 
-Since the data1$Value variables is not imported in as type numeric, the last line of code adjusts for that.
-```{r, eval = FALSE, warning = FALSE, error = FALSE}
-data1        <-  read.csv("Q_DENTON.csv",    stringsAsFactors = FALSE)
-data2        <-  read.csv("Q_NO_DENTON.csv", stringsAsFactors = FALSE)
-stavaza      <-  read.csv("stavazaR.csv",    stringsAsFactors = FALSE)
-data1$Value  <-  as.numeric(data1$Value)
+# WN
+WN_2013_Q1 <- read.csv("WN_2013_Q1.csv", stringsAsFactors = FALSE)
+WN_2013_Q2 <- read.csv("WN_2013_Q2.csv", stringsAsFactors = FALSE)
+WN_2013_Q3 <- read.csv("WN_2013_Q3.csv", stringsAsFactors = FALSE)
+WN_2013_Q4 <- read.csv("WN_2013_Q4.csv", stringsAsFactors = FALSE)
+
+WN_2014_Q1 <- read.csv("WN_2014_Q1.csv", stringsAsFactors = FALSE)
+WN_2014_Q2 <- read.csv("WN_2014_Q2.csv", stringsAsFactors = FALSE)
+WN_2014_Q3 <- read.csv("WN_2014_Q3.csv", stringsAsFactors = FALSE)
+WN_2014_Q4 <- read.csv("WN_2014_Q4.csv", stringsAsFactors = FALSE)
+
+WN_2015_Q1 <- read.csv("WN_2015_Q1.csv", stringsAsFactors = FALSE)
+WN_2015_Q2 <- read.csv("WN_2015_Q2.csv", stringsAsFactors = FALSE)
+WN_2015_Q3 <- read.csv("WN_2015_Q3.csv", stringsAsFactors = FALSE)
+WN_2015_Q4 <- read.csv("WN_2015_Q4.csv", stringsAsFactors = FALSE)
+
+WN_2016_Q1 <- read.csv("WN_2016_Q1.csv", stringsAsFactors = FALSE)
+WN_2016_Q2 <- read.csv("WN_2016_Q2.csv", stringsAsFactors = FALSE)
+WN_2016_Q3 <- read.csv("WN_2016_Q3.csv", stringsAsFactors = FALSE)
+WN_2016_Q4 <- read.csv("WN_2016_Q4.csv", stringsAsFactors = FALSE)
+
+WN_2017_Q1 <- read.csv("WN_2017_Q1.csv", stringsAsFactors = FALSE)
+WN_2017_Q2 <- read.csv("WN_2017_Q2.csv", stringsAsFactors = FALSE)
+WN_2017_Q3 <- read.csv("WN_2017_Q3.csv", stringsAsFactors = FALSE)
+WN_2017_Q4 <- read.csv("WN_2017_Q4.csv", stringsAsFactors = FALSE)
+
+WN_2018_Q1 <- read.csv("WN_2018_Q1.csv", stringsAsFactors = FALSE)
+WN_2018_Q2 <- read.csv("WN_2018_Q2.csv", stringsAsFactors = FALSE)
+WN_2018_Q3 <- read.csv("WN_2018_Q3.csv", stringsAsFactors = FALSE)
+WN_2018_Q4 <- read.csv("WN_2018_Q4.csv", stringsAsFactors = FALSE)
+
+DRH <- read.csv("DRH2009-2018.csv")
 ```
 
-# Loading the required packages 
-In case you are doing this for the first time or the packages are not available in your library, install the required packages with the example code: install.packages("dplyr"). Note that the last line actually detaches the package "plyr". This is needed because if it is lodaded it will interfere with the "group_by" function from the dplyr package which we will be using later on. 
+# WG
+To be added later
+WG_2013_Q1 <- read.csv("WG_2013_Q1.csv", stringsAsFactors = FALSE)
+WG_2013_Q2 <- read.csv("WG_2013_Q2.csv", stringsAsFactors = FALSE)
+WG_2013_Q3 <- read.csv("WG_2013_Q3.csv", stringsAsFactors = FALSE)
+WG_2013_Q4 <- read.csv("WG_2013_Q4.csv", stringsAsFactors = FALSE)
 
-pacman referes to a package of that name that aids with the loading of the packages. If it does not function or if not available it is also possible to load the packages individually e.g. install.packages("dplyr").
-```{r, eval=FALSE, warning = FALSE, error = FALSE, message=FALSE}
-## install.packages("pacman") if needed
-pacman::p_load(dplyr, tidyr)
-detach(package:plyr)
+WG_2014_Q1 <- read.csv("WG_2014_Q1.csv", stringsAsFactors = FALSE)
+WG_2014_Q2 <- read.csv("WG_2014_Q2.csv", stringsAsFactors = FALSE)
+WG_2014_Q3 <- read.csv("WG_2014_Q3.csv", stringsAsFactors = FALSE)
+WG_2014_Q4 <- read.csv("WG_2014_Q4.csv", stringsAsFactors = FALSE)
+
+WG_2015_Q1 <- read.csv("WG_2015_Q1.csv", stringsAsFactors = FALSE)
+WG_2015_Q2 <- read.csv("WG_2015_Q2.csv", stringsAsFactors = FALSE)
+WG_2015_Q3 <- read.csv("WG_2015_Q3.csv", stringsAsFactors = FALSE)
+WG_2015_Q4 <- read.csv("WG_2015_Q4.csv", stringsAsFactors = FALSE)
+
+WG_2016_Q1 <- read.csv("WG_2016_Q1.csv", stringsAsFactors = FALSE)
+WG_2016_Q2 <- read.csv("WG_2016_Q2.csv", stringsAsFactors = FALSE)
+WG_2016_Q3 <- read.csv("WG_2016_Q3.csv", stringsAsFactors = FALSE)
+WG_2016_Q4 <- read.csv("WG_2016_Q4.csv", stringsAsFactors = FALSE)
+
+WG_2017_Q1 <- read.csv("WG_2017_Q1.csv", stringsAsFactors = FALSE)
+WG_2017_Q2 <- read.csv("WG_2017_Q2.csv", stringsAsFactors = FALSE)
+WG_2017_Q3 <- read.csv("WG_2017_Q3.csv", stringsAsFactors = FALSE)
+WG_2017_Q4 <- read.csv("WG_2017_Q4.csv", stringsAsFactors = FALSE)
+
+WG_2018_Q1 <- read.csv("WG_2018_Q1.csv", stringsAsFactors = FALSE)
+WG_2018_Q2 <- read.csv("WG_2018_Q2.csv", stringsAsFactors = FALSE)
+WG_2018_Q3 <- read.csv("WG_2018_Q3.csv", stringsAsFactors = FALSE)
+WG_2018_Q4 <- read.csv("WG_2018_Q4.csv", stringsAsFactors = FALSE)
+
+
+# WN file manipulations
+Remove duplicates that meet the criteria that all variables are the same.
+```{r}
+WN_2013_Q1$Period <- "2013.01"
+WN_2013_Q2$Period <- "2013.02"
+WN_2013_Q3$Period <- "2013.03"
+WN_2013_Q4$Period <- "2013.04"
+
+WN_2014_Q1$Period <- "2014.01"
+WN_2014_Q2$Period <- "2014.02"
+WN_2014_Q3$Period <- "2014.03"
+WN_2014_Q4$Period <- "2014.04"
+
+WN_2015_Q1$Period <- "2015.01"
+WN_2015_Q2$Period <- "2015.02"
+WN_2015_Q3$Period <- "2015.03"
+WN_2015_Q4$Period <- "2015.04"
+
+WN_2016_Q1$Period <- "2016.01"
+WN_2016_Q2$Period <- "2016.02"
+WN_2016_Q3$Period <- "2016.03"
+WN_2016_Q4$Period <- "2016.04"
+
+WN_2017_Q1$Period <- "2017.01"
+WN_2017_Q2$Period <- "2017.02"
+WN_2017_Q3$Period <- "2017.03"
+WN_2017_Q4$Period <- "2017.04"
+
+WN_2018_Q1$Period <- "2018.01"
+WN_2018_Q2$Period <- "2018.02"
+WN_2018_Q3$Period <- "2018.03"
+WN_2018_Q4$Period <- "2018.04"
+
+WN_merged <- bind_rows(WN_2013_Q1,
+                       WN_2013_Q2,
+                       WN_2013_Q3,
+                       WN_2013_Q4,
+                       WN_2014_Q1,
+                       WN_2014_Q2,
+                       WN_2014_Q3,
+                       WN_2014_Q4,
+                       WN_2015_Q1,
+                       WN_2015_Q2,
+                       WN_2015_Q3,
+                       WN_2015_Q4,
+                       WN_2016_Q1,
+                       WN_2016_Q2,
+                       WN_2016_Q3,
+                       WN_2016_Q4,
+                       WN_2017_Q1,
+                       WN_2017_Q2,
+                       WN_2017_Q3,
+                       WN_2017_Q4,
+                       WN_2018_Q1,
+                       WN_2018_Q2,
+                       WN_2018_Q3,
+                       WN_2018_Q4,
+                       )
+
+rm(WN_2013_Q1)
+rm(WN_2013_Q2)
+rm(WN_2013_Q3)
+rm(WN_2013_Q4)
+rm(WN_2014_Q1)
+rm(WN_2014_Q2)
+rm(WN_2014_Q3)
+rm(WN_2014_Q4)
+rm(WN_2015_Q1)
+rm(WN_2015_Q2)
+rm(WN_2015_Q3)
+rm(WN_2015_Q4)
+rm(WN_2016_Q1)
+rm(WN_2016_Q2)
+rm(WN_2016_Q3)
+rm(WN_2016_Q4)
+rm(WN_2017_Q1)
+rm(WN_2017_Q2)
+rm(WN_2017_Q3)
+rm(WN_2017_Q4)
+rm(WN_2018_Q1)
+rm(WN_2018_Q2)
+rm(WN_2018_Q3)
+rm(WN_2018_Q4)
+
+WN_merged <- WN_merged %>% distinct()
 ```
 
-# Combining data sets
-Combining data sets to a single dataframe (tbl_df format). To keep the global environment clean we only keep the combined dataframe.
-```{r, warning = FALSE, error = FALSE, message=FALSE, eval = FALSE}
-data1                  <- tbl_df(data1)
-data2                  <- tbl_df(data2)
-databind               <- bind_rows(data1,data2)
-rm(data1)
-rm(data2)
-dplyr::arrange(databind,STATID)
-```
-
-# Filtering data
-Filtering data to contain the variables that we are interested in seperatly. In principle the only variables that are needed are Nominal_Q and Real_Q. The deflators can be calculated by dividing the two. Aditionally we also load the Nominal_Y variable, but only to perform consistency checks.
-```{r, eval = FALSE}
-Nominal_Q                <- filter(databind,databind$Description=="Nominal VA")
-Nominal_Q$Description    <- NULL
-
-Real_Q                   <- filter(databind,databind$Description=="Real VA")
-Real_Q$Description       <- NULL
-
-Nominal_Y                <- filter(databind,databind$Description=="B nominal")
-Nominal_Y$Description    <- NULL
-
-rm(databind)
-```
-
-# Long to wide format 
-We change the orientation of the data to facilitate further manipulation.
-```{r, eval = FALSE}
-Nominal_Q    <-spread(Nominal_Q,Period,Value)
-Nominal_Y    <-spread(Nominal_Y,Period,Value)
-Real_Q       <-spread(Real_Q,Period,Value)
-```
-
-# Consistency check
-Creating a check to verify whether the year figures are consistent with what is maintained in the Stavaza file.
-```{r, eval = FALSE}
-Check.Nominal.Y.2013   <-select(Nominal_Y,STATID,`2013`)
-
-as.character(stavaza$Werk.ISIC)
- 
-stavaza_temp              <- select(stavaza,
-                           c(Werk.ISIC,
-                             B1.g,
-                             TAB.CAT,
-                             TAB.CAT_DESCRIPTION,
-                             ISIC_DESCRIPTION)
-                           )
-
-Check.Nominal.Y.2013   <- select(Check.Nominal.Y.2013,
-                                 c(STATID,`2013`)
-                                 )
-
-Test.equality          <- left_join(stavaza_temp,Check.Nominal.Y.2013,
-                            by=c("Werk.ISIC"="STATID"))
-
-rm(Check.Nominal.Y.2013)
-
-Test.equality$Check    <-Test.equality$`2013`==Test.equality$B1.g
-
-Test.equality          <- Test.equality[,c(1,3,4,5,2,6,7)]
-dplyr::arrange(Test.equality,Werk.ISIC)
-rm(stavaza_temp)
-
-# Query line all false only. 
-```
-
-Changing the variable names for consistency. 
-*Note: Year variables need to be expanded*
-```{r, eval = FALSE}
-years <- c("STATID",
-                                   "Y_2013",
-                                   "Y_2014",
-                                   "Y_2015",
-                                   "Y_2016",
-                                   "Y_2017"
-                                   )
-Nominal_Y <- setNames(Nominal_Y, years)
-rm(years)
-```
-
-The left_join function merges two data sets and after that we select and arrange the variables.
-*Note: Year variables need to be expanded*
-```{r, eval = FALSE}
-variables <- c("STATID",
-               "TAB.CAT",
-               "Deflator.1",
-               "Deflator.2",
-               "TAB.CAT_DESCRIPTION",
-               "ISIC_DESCRIPTION",
-               "Y_2013",
-               "Y_2014",
-               "Y_2015",
-               "Y_2016",
-               "Y_2017"
-                                       )
-
-# Nominal_Y
-Nominal_Y<- left_join(Nominal_Y,stavaza,
-                   by=c("STATID"="Werk.ISIC"))
-Nominal_Y<- select(Nominal_Y,variables)
-dplyr::arrange(Nominal_Y,TAB.CAT)
-
-#Cleanup Stavaza
-stavaza <-select(stavaza,
-                 'Werk.ISIC',
-                 'TAB.CAT',
-                 'TAB.CAT_DESCRIPTION',
-                 'Deflator.2'
-                 )
-
-# Nominal_Q
-Nominal_Q<- left_join(stavaza,Nominal_Q,
-                   by=c("Werk.ISIC"="STATID"))
-dplyr::arrange(Nominal_Q,TAB.CAT)
-
-# Real_Q
-Real_Q<- left_join(stavaza,Real_Q,
-                   by=c("Werk.ISIC"="STATID"))
-dplyr::arrange(Real_Q,TAB.CAT)
-
-rm(variables)
+Read in data file with meta information.
+```{r}
+meta <- read.csv("2013_2018.csv", stringsAsFactors = FALSE)
 ```
 
 
-# Consistency check
-One more consistency check, checking the sum of the quarterly nominal GDP whether it adds up to the right amount for 2013.
-```{r, eval = FALSE}
-Test.equality$q.check <- Nominal_Q$`2013-1`+Nominal_Q$`2013-2`+Nominal_Q$`2013-3`+Nominal_Q$`2013-4`
-Test.equality$Check2    <-Test.equality$`2013`==Test.equality$q.check
-#Query to select FALSE
+Create subset of meta
+```{r}
+meta_subset <- meta[c("Sector_Code_SVB",
+                      "Economic_Activity_Rev_4",
+                                          "Rechtsvorm",
+                                          "Persoonsnr",
+                                          "Fiscale_Eenheid",
+                                          "Promising_Sector",
+                                          "Gac_code_SVB",
+                                          "GIS_adres_SVB",
+                                          "X_coord_SVB",
+                                          "Y_coord_SVB",
+                                          "Region",
+                                          "Aruba_ISIC_CBS",
+                                          "ISIC_rev4_CBS",
+                                          "Tourism_TSA",
+                                          "CohierCode"
+                                          )]
 ```
 
-# Creating the sequence calculation for deflators (5 steps).
-The deflation process is rather tricky and involves different steps. While most ISICs are supplied with their relevant deflators, there are ISICs for which a deflator is not available.
+```{r}
+DRH$Geslacht            <- as.character(DRH$Geslacht)
+DRH$burgelijke_staat    <- as.character(DRH$burgelijke_staat)
+DRH$Maandloon           <- as.integer(DRH$Maandloon)
+DRH$Werkweek            <- as.integer(DRH$Werkweek)
+DRH$Aanv_DVB            <- as.character(DRH$Aanv_DVB)
+DRH$Omschrijving        <- as.character(DRH$Omschrijving)
+DRH$Klasse              <- as.integer(DRH$Klasse)
+DRH$Code                <- as.character(DRH$Code)
+WN_merged$Code          <- as.character(WN_merged$Code)
+DRH$Datum_Inschrijving  <- as.character(DRH$Datum_Inschrijving)
+DRH$Period              <- as.character(DRH$Periode)
+DRH                     <- DRH[,-1]
 
-To work around this issues there are fa ew ISICs that follow whatever deflator is calculated within their group.However, there are also ISICs that follow the overall deflator.
-THis process is divided in 5 steps outlined below:
-
-## First round
-First step is to perform the calculation on variables pertaining to the "Own" deflator category. 
-To do this we are creating vectors which we can use to multiply the dataframes with. So that only the relevant lines are filled in. 
-
-There is alsoa function which we can call up to substitute the "NaN" that appears when 0 is multiplyed by 0. 
-```{r, eval = FALSE}
-Vector_Own   <- if_else(Nominal_Q$Deflator.2=="Own",1,0)
-Vector_Group <- if_else(Nominal_Q$Deflator.2=="Group",1,0)
-Vector_All   <- if_else(Nominal_Q$Deflator.2=="All",1,0)
-
-# First round: Own deflators
-redundant <-c("Werk.ISIC",
-              "TAB.CAT",
-              "TAB.CAT_DESCRIPTION",
-              "Deflator.2")
-
-Own_Nom_Q      <-(select(Nominal_Q,-redundant)
-                  * Vector_Own
-                  )
-
-Own_Real_Q     <-(select(Real_Q,-redundant)
-                  * Vector_Own
-                  )
-
-Own_Deflator_Q <- Own_Nom_Q / Own_Real_Q *100                                                     # Deflation
-# consistency check maybe add
-
-# Little function to enable us to remove the "Nan" to "0"
-is.nan.data.frame <- function(x)
-do.call(cbind, lapply(x, is.nan))
-
-Own_Deflator_Q[is.nan(Own_Deflator_Q)] <- 0
+WN_merged               <- bind_rows(WN_merged,DRH)
+rm(DRH)
 ```
 
-## Second round: Group 
-```{r, eval = FALSE}
-Group_Nom_Q  <- bind_cols(Own_Nom_Q, select(Nominal_Q, TAB.CAT))
-             
-Group_Nom_Q <- group_by(Group_Nom_Q, TAB.CAT) %>%
-  summarise(N.2013.1=sum(`2013-1`),
-            N.2013.2=sum(`2013-2`),
-            N.2013.3=sum(`2013-3`),
-            N.2013.4=sum(`2013-4`),
-            N.2014.1=sum(`2014-1`),
-            N.2014.2=sum(`2014-2`),
-            N.2014.3=sum(`2014-3`),
-            N.2014.4=sum(`2014-4`),
-            N.2015.1=sum(`2015-1`),
-            N.2015.2=sum(`2015-2`),
-            N.2015.3=sum(`2015-3`),
-            N.2015.4=sum(`2015-4`),
-            N.2016.1=sum(`2016-1`),
-            N.2016.2=sum(`2016-2`),
-            N.2016.3=sum(`2016-3`),
-            N.2016.4=sum(`2016-4`),
-            N.2017.1=sum(`2017-1`),
-            N.2017.2=sum(`2017-2`),
-            N.2017.3=sum(`2017-3`),
-            N.2017.4=sum(`2017-4`)
-            )
- 
-Group_Real_Q  <- bind_cols(Own_Real_Q, select(Real_Q, TAB.CAT))
-             
-Group_Real_Q <- group_by(Group_Real_Q, TAB.CAT) %>%
-  summarise(N.2013.1=sum(`2013-1`),
-            N.2013.2=sum(`2013-2`),
-            N.2013.3=sum(`2013-3`),
-            N.2013.4=sum(`2013-4`),
-            N.2014.1=sum(`2014-1`),
-            N.2014.2=sum(`2014-2`),
-            N.2014.3=sum(`2014-3`),
-            N.2014.4=sum(`2014-4`),
-            N.2015.1=sum(`2015-1`),
-            N.2015.2=sum(`2015-2`),
-            N.2015.3=sum(`2015-3`),
-            N.2015.4=sum(`2015-4`),
-            N.2016.1=sum(`2016-1`),
-            N.2016.2=sum(`2016-2`),
-            N.2016.3=sum(`2016-3`),
-            N.2016.4=sum(`2016-4`),
-            N.2017.1=sum(`2017-1`),
-            N.2017.2=sum(`2017-2`),
-            N.2017.3=sum(`2017-3`),
-            N.2017.4=sum(`2017-4`)
-            )
 
-Group_Deflator_Q <- select(Group_Nom_Q, -c(TAB.CAT)) / select(Group_Real_Q,-c(TAB.CAT)) *100        # Deflation
-Group_Deflator_Q[is.nan(Group_Deflator_Q)] <- 0
-
-Group_Deflator_Q <- bind_cols(select(Group_Nom_Q, TAB.CAT),Group_Deflator_Q)
-
-# expanding the group deflators to voer all ISICs.
-expand_round_2 <- table(Nominal_Q$TAB.CAT) %>%
-  as.vector()%>%
-  as.numeric()
-
-Group_Deflator_Q <- uncount(Group_Deflator_Q, expand_round_2)
-Group_Deflator_Q <- select(Group_Deflator_Q,-c(TAB.CAT)) * Vector_Group
-
-Group_Nom_Q      <-(select(Nominal_Q,-redundant)
-                  * Vector_Group
-                  )
-
-Group_Real_Q <- Group_Nom_Q / Group_Deflator_Q * 100                                              # Deflation adjusted
-Group_Real_Q[is.nan(Group_Real_Q)] <- 0
+Left merge
+```{r}
+WN_merged <- left_join(WN_merged,meta_subset,
+                        by=c("Code"="CohierCode"))
 ```
 
-## Third round: create deflator for all
-```{r, eval = FALSE}
-Agg_Nom_Q  <- Group_Nom_Q  + Own_Nom_Q
-Agg_Real_Q <- Group_Real_Q + Own_Real_Q
+* Attempt at queries
+Median Maandloon ("Maandloon") per economic activity ("Economic_activity_Rev_4") per quarter ("Period")
+```{r}
+WN_median <- WN_merged[c("Maandloon",
+                         "Period",
+                         "Economic_Activity_Rev_4"
+                       )] %>%
+  group_by(Economic_Activity_Rev_4,Period)%>%
+  summarise(Econ=first(Economic_Activity_Rev_4),
+            Period=first(Period),
+            Maandl=median(Maandloon))
 
-Agg_Nom_Q_sum  <- Agg_Nom_Q %>%
-  summarise_all(sum)
 
-Agg_Real_Q_sum  <- Agg_Real_Q %>%
-  summarise_all(sum)
-
-Agg_Deflator_Q <- Agg_Nom_Q_sum / Agg_Real_Q_sum *100                                                   # Deflator
-
-expand_round_3 <- count(Nominal_Q) %>%
-  as.numeric()
-
-All_Deflator_Q <- uncount(Agg_Deflator_Q, expand_round_3)
-All_Deflator_Q <- All_Deflator_Q * Vector_All
-
-All_Nom_Q <- select(Nominal_Q,-c(Werk.ISIC,TAB.CAT,TAB.CAT_DESCRIPTION,Deflator.2)) * Vector_All
-
-All_Real_Q <- All_Nom_Q / All_Deflator_Q * 100                                                         # Deflator
-All_Real_Q[is.nan(All_Real_Q)] <- 0
-
+           
+           ,Economic_Activity_Rev_4)%>%
+  summarise(Maandl=median(Maandloon))
 ```
 
-## Fourth round: complete final table.
-Merging 
-```{r, eval = FALSE}
-Deflator_Q <- Own_Deflator_Q+ Group_Deflator_Q+All_Deflator_Q
-Real_Q     <- select(Nominal_Q,-c(Werk.ISIC,TAB.CAT,TAB.CAT_DESCRIPTION,Deflator.2)) / Deflator_Q * 100    # Deflation
 
-Real_Q[is.nan(Real_Q)] <- 0
 
-# final 
-Final_Nom_Q  <- All_Nom_Q + Group_Nom_Q  + Own_Nom_Q
-Final_Real_Q   <- All_Real_Q + Group_Real_Q + Own_Real_Q
-
-Final_Nom_Q  <- Final_Nom_Q %>%
-  summarise_all(sum)
-
-Final_Real_Q  <- Final_Real_Q %>%
-  summarise_all(sum)
+Create output csv.
+```{r}
+write.csv(WN_merged,file="WN_merged.csv")
 ```
 
-## Fifth round: overall deflator
-```{r, eval = FALSE}
-Overall_Nom_Q <- (select(Nominal_Q,-redundant)) %>%
-  summarise_all(sum)
-Overall_Real_Q <- Real_Q%>%
-  summarise_all(sum)
-
-Overall_Deflator_Q <- Overall_Nom_Q / Overall_Real_Q * 100                                        # Deflation
-```
-
-# Summarizing the quarterly outputs into yearly columns.
-```{r, eval = FALSE}
-Y.2013 <-c("2013-1","2013-2","2013-3","2013-4")
-Y.2014 <-c("2014-1","2014-2","2014-3","2014-4")
-Y.2015 <-c("2015-1","2015-2","2015-3","2015-4")
-Y.2016 <-c("2016-1","2016-2","2016-3","2016-4")
-Y.2017 <-c("2017-1","2017-2","2017-3","2017-4")
-
-Overall_Nom_Y <- select(Nominal_Q, redundant)
-Overall_Nom_Y$Y.2013 <- rowSums(Nominal_Q[,Y.2013])
-Overall_Nom_Y$Y.2014 <- rowSums(Nominal_Q[,Y.2014])
-Overall_Nom_Y$Y.2015 <- rowSums(Nominal_Q[,Y.2015])
-Overall_Nom_Y$Y.2016 <- rowSums(Nominal_Q[,Y.2016])
-Overall_Nom_Y$Y.2017 <- rowSums(Nominal_Q[,Y.2017])
-
-Test.equality.2 <- select(Nominal_Y,-c(STATID,TAB.CAT,Deflator.1,Deflator.2,TAB.CAT_DESCRIPTION,ISIC_DESCRIPTION))- select(Overall_Nom_Y,-redundant) %>%
-  round(digits=2)
-
-Overall_Real_Y <- Real_Q
-Overall_Real_Y$Y.2013 <- rowSums(Real_Q[,Y.2013])
-Overall_Real_Y$Y.2014 <- rowSums(Real_Q[,Y.2014])
-Overall_Real_Y$Y.2015 <- rowSums(Real_Q[,Y.2015])
-Overall_Real_Y$Y.2016 <- rowSums(Real_Q[,Y.2016])
-Overall_Real_Y$Y.2017 <- rowSums(Real_Q[,Y.2017])
-
-Overall_Real_Y_total <- Overall_Real_Y%>%
-  summarise_all(sum)
-  
-Overall_Real_Y_total <- select(Overall_Real_Y_total,c("Y.2013","Y.2014","Y.2015","Y.2016","Y.2017"))
-
-Overall_Nom_Y_total <- Overall_Nom_Y %>%
-  select(-c(Werk.ISIC,TAB.CAT,TAB.CAT_DESCRIPTION,Deflator.2)) %>%
-  summarise_all(sum)
-
-Overall_Deflator_Y_total <- Overall_Nom_Y_total / Overall_Real_Y_total * 100                         # Deflation
-```
